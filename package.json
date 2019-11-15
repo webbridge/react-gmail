@@ -1,0 +1,35 @@
+{
+  "name": "react-gmail",
+  "version": "1.0.0",
+  "description": "Integration GMail API into your React Application",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/webbridge/react-gmail.git"
+  },
+  "keywords": [
+    "react",
+    "gmail",
+    "api",
+    "react-gmail",
+    "react-gmail-api"
+  ],
+  "author": "Andrei Tsapliuk",
+  "contributors": [
+    {
+      "name": "webbridge",
+      "email": "webbridge@mail.ru"
+    }
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/webbridge/react-gmail/issues"
+  },
+  "peerDependencies": {
+    "react": "^16.11.0"
+  },
+  "homepage": "https://github.com/webbridge/react-gmail#readme"
+}
