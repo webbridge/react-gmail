@@ -21,7 +21,7 @@ class GmailApi {
 
   /**
    * @param {string} userId
-   * @returns {object} emailAddress, messagesTotal, threadsTotal , historyId
+   * @returns {Promise} Object: { emailAddress, messagesTotal, threadsTotal , historyId }
    */
   getProfile(userId = "me") {
     if (this.signIn) {
@@ -35,7 +35,7 @@ class GmailApi {
    * @param {boolean} unread
    * @param {integer} maxResults
    * @param {string} userId
-   * @returns {array} Array of (id, threadId)
+   * @returns {Promise} Array: [ {id, threadId} ]
    */
   getMessageIds(unread = false, maxResults = 10, userId = "me") {
     if (this.signIn) {
@@ -52,7 +52,7 @@ class GmailApi {
   /**
    * @param {[string] | string} ids
    * @param {string} userId
-   * @returns {object} id, labelIds, snippet, internalDate, payload
+   * @returns {Promise} [{id, labelIds, snippet, internalDate, payload}] | {...}
    */
   getMessages(ids, userId = "me") {
     if (this.signIn) {
@@ -134,7 +134,7 @@ class GmailApi {
   }
 
   /**
-   *
+   *  Normalize data
    * @param {array | object} data getMessages response
    * @returns {array | object}
    */
