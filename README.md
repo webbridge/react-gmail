@@ -8,20 +8,19 @@ You can use npm `npm install --save react-gmail` or yarn `yarn add react-gmail`
 
 ## use
 
-For using gmail API you need to import instance in your application `import gmailApi from 'react-gmail'`
-Repeat **Step 1** from this link: https://developers.google.com/gmail/api/quickstart/js
-You also need to create file `gmail.config.json` in root of your application with your config:
+- Repeat **Step 1** from this link: https://developers.google.com/gmail/api/quickstart/js
+- You also need to create file `gmail.config.json` in root of your application with your config:
 
 ```json
 {
   "clientId": "<CLIENT_ID>",
   "apiKey": "<API_KEY>",
   "scope": "https://www.googleapis.com/auth/gmail.readonly",
-  "discoveryDocs": [
-    "https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest"
-  ]
+  "discoveryDocs": ["https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest"]
 }
 ```
+
+- Import instance in your application `import gmailApi from 'react-gmail'`
 
 For get more info about API please check documentation: https://developers.google.com/gmail/api/v1/reference
 
