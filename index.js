@@ -1,17 +1,19 @@
 import gapi from "./lib/gapi";
 
-const config = require("../../../gmail.config.json");
+const config = require("../../gmail.config.json");
 const metaHeaders = ["From", "Date", "Subject"];
 
 class GmailApi {
   constructor() {
     this.signIn = false;
+    this.listenCallback = null;
     try {
       this.initClient = this.initClient.bind(this);
       this.handleError = this.handleError.bind(this);
       this.getMessages = this.getMessages.bind(this);
-      this.updateSigninStatus = this.updateSigninStatus.bind(this);
+      this.updateSignInStatus = this.updateSignInStatus.bind(this);
       this.normalizeData = this.normalizeData.bind(this);
+      this.listenSign = this.listenSign.bind(this);
 
       gapi.load("client:auth2", this.initClient);
     } catch (e) {
@@ -59,9 +61,7 @@ class GmailApi {
       if (typeof ids === "string") {
         return gapi.client.gmail.users.messages.get({ userId, id: ids });
       } else {
-        return Promise.all(
-          ids.map(id => gapi.client.gmail.users.messages.get({ userId, id }))
-        );
+        return Promise.all(ids.map(id => gapi.client.gmail.users.messages.get({ userId, id })));
       }
     } else {
       return this.handleError();
@@ -118,16 +118,12 @@ class GmailApi {
     if (payload.hasOwnProperty("parts")) {
       payload.parts.forEach(part => {
         if (part.mimeType === "text/plain") {
-          result.text = atob(
-            part.body.data.replace(/-/g, "+").replace(/_/g, "/")
-          );
+          result.text = atob(part.body.data.replace(/-/g, "+").replace(/_/g, "/"));
         }
       });
     } else {
       if (!!payload.body.size) {
-        result.text = atob(
-          payload.body.data.replace(/-/g, "+").replace(/_/g, "/")
-        );
+        result.text = atob(payload.body.data.replace(/-/g, "+").replace(/_/g, "/"));
       }
     }
     return result;
@@ -143,8 +139,6 @@ class GmailApi {
 
     if (Array.isArray(data)) {
       result = data.map(res => {
-        console.log(res);
-
         const { id, snippet } = res.result;
         return {
           ...this.getMetaFromHeaders(res),
@@ -166,23 +160,29 @@ class GmailApi {
   }
 
   // Update SignIn property
-  updateSigninStatus(isSignedIn) {
+  updateSignInStatus(isSignedIn) {
     this.signIn = isSignedIn;
   }
 
-  // Sign in google account
-  handleSigninClick() {
+  /**
+   * Sign in google account
+   * @returns {Promise}
+   */
+  handleSignIn() {
     try {
-      gapi.auth2.getAuthInstance().signIn();
+      return gapi.auth2.getAuthInstance().signIn();
     } catch (e) {
       console.log(e);
     }
   }
 
-  // Sign out google account
-  handleSignoutClick() {
+  /**
+   * Sign out google account
+   * @returns {Promise}
+   */
+  handleSignOut() {
     try {
-      gapi.auth2.getAuthInstance().signOut();
+      return gapi.auth2.getAuthInstance().signOut();
     } catch (e) {
       console.log(e);
     }
@@ -192,7 +192,7 @@ class GmailApi {
    * Error Handler
    * @param {string} message
    */
-  handleError(message = "You are not authorised or api not initialized!") {
+  handleError(message = "You are not authorized or api not initialized!") {
     return new Promise((_, reject) => {
       reject({
         message,
@@ -202,12 +202,28 @@ class GmailApi {
     });
   }
 
+  /**
+   * Method for update your sign if it was changed
+   * @param {*} callback function for updating sign status
+   */
+  listenSign(callback) {
+    if (gapi.auth2) {
+      gapi.auth2.getAuthInstance().isSignedIn.listen(callback);
+    } else {
+      this.listenCallback = callback;
+    }
+  }
+
   // Initialize the API client library
   initClient() {
     try {
       gapi.client.init(config).then(() => {
-        gapi.auth2.getAuthInstance().isSignedIn.listen(this.updateSigninStatus);
-        this.updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+        this.listenSign(this.updateSignInStatus);
+        this.updateSignInStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+        if (!!this.listenCallback) {
+          this.listenSign(this.listenCallback);
+          this.listenCallback(gapi.auth2.getAuthInstance().isSignedIn.get());
+        }
       });
     } catch (e) {
       console.log(e);

@@ -17,9 +17,7 @@ You also need to create file `gmail.config.json` in root of your application wit
   "clientId": "<CLIENT_ID>",
   "apiKey": "<API_KEY>",
   "scope": "https://www.googleapis.com/auth/gmail.readonly",
-  "discoveryDocs": [
-    "https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest"
-  ]
+  "discoveryDocs": ["https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest"]
 }
 ```
 
@@ -54,6 +52,29 @@ For getting message ids:
 ```
 
 ##### getMessages
+
+For getting message data:
+
+```javascript
+ /**
+   * @param {[string] | string} ids
+   * @param {string} userId
+   * @returns {Promise} [{id, labelIds, snippet, internalDate, payload}] | {...}
+   */
+  getMessages(ids, userId = "me").then(...)
+```
+
+##### listenSign
+
+For listening your sign status
+
+```javascript
+/**
+ * Method for update your sign if it was changed
+ * @param {*} callback function for updating sign status
+ */
+listenSign(callback);
+```
 
 For getting message data:
 
@@ -153,15 +174,13 @@ class SomeComponent extends React.Component {
 
 ##### getProfile
 
-```javscript
-gmailApi.getProfile().then((resProfile) => {
-    this.setState({profile: resProfile.result})
-})
+```javascript
+gmailApi.getProfile().then(resProfile => {
+  this.setState({ profile: resProfile.result });
+});
 ```
 
-## customize
-
-For customizing signIn & signOut you can use `handleSigninClick` and `handleSignoutClick` methods:
+##### listenSign
 
 ```javascript
 import React from "react";
@@ -172,12 +191,55 @@ class SomeComponent extends React.Component {
     sign: gmailApi.sign
   };
 
+  componentDidMount() {
+    gmailApi.listenSign(this.signUpdate);
+  }
+
+  signUpdate = sign => {
+    this.setState({ sign });
+  };
+
+  render() {
+    return (
+      <div>
+        <p> Sign status: {this.state.sign} </p>
+      </div>
+    );
+  }
+}
+```
+
+## customize
+
+For customizing signIn & signOut you can use `handleSignIn` and `handleSignOut` methods:
+
+```javascript
+import React from "react";
+import gmailApi from "react-api";
+
+class SomeComponent extends React.Component {
+  state = {
+    sign: gmailApi.sign
+  };
+
+  componentDidMount() {
+    gmailApi.listenSign(this.signUpdate);
+  }
+
+  signUpdate = sign => {
+    this.setState({ sign });
+  };
+
   handleSignIn = () => {
-    gmailApi.handleSigninClick();
+    gmailApi.handleSignIn().then(() => {
+      console.log("handleSignIn");
+    });
   };
 
   handleSignOut = () => {
-    gmailApi.handleSignoutClick();
+    gmailApi.handleSignOut().then(() => {
+      console.log("handleSignOut");
+    });
   };
 
   render() {
