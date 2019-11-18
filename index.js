@@ -11,7 +11,7 @@ class GmailApi {
       this.initClient = this.initClient.bind(this);
       this.handleError = this.handleError.bind(this);
       this.getMessages = this.getMessages.bind(this);
-      this.updateSignInStatus = this.updateSignInStatus.bind(this);
+      this.updateSigninStatus = this.updateSigninStatus.bind(this);
       this.normalizeData = this.normalizeData.bind(this);
       this.listenSign = this.listenSign.bind(this);
 
@@ -52,17 +52,56 @@ class GmailApi {
   }
 
   /**
+   * Get messages by array of ids
    * @param {[string] | string} ids
    * @param {string} userId
    * @returns {Promise} [{id, labelIds, snippet, internalDate, payload}] | {...}
    */
-  getMessages(ids, userId = "me") {
+  getMessagesByIds(ids, userId = "me") {
     if (this.signIn) {
       if (typeof ids === "string") {
         return gapi.client.gmail.users.messages.get({ userId, id: ids });
       } else {
         return Promise.all(ids.map(id => gapi.client.gmail.users.messages.get({ userId, id })));
       }
+    } else {
+      return this.handleError();
+    }
+  }
+
+  /**
+   * @param {boolean} [unread=false]
+   * @param {number} [maxResults=10]
+   * @param {string} [userId="me"]
+   * @returns {Promise} [{id, labelIds, snippet, internalDate, payload}] | {...}
+   */
+  getMessages(unread = false, maxResults = 10, userId = "me") {
+    if (this.signIn) {
+      let q = "";
+      if (!!unread) {
+        q = "is:unread";
+      }
+
+      return new Promise((resolve, reject) => {
+        gapi.client.gmail.users.messages
+          .list({ userId, maxResults, q })
+          .then(resIds => {
+            if (typeof ids === "string") {
+              resolve(gapi.client.gmail.users.messages.get({ userId, id: resIds.result.id }));
+            } else {
+              resolve(
+                Promise.all(
+                  resIds.result.messages.map(({ id }) =>
+                    gapi.client.gmail.users.messages.get({ userId, id })
+                  )
+                )
+              );
+            }
+          })
+          .catch(e => {
+            reject(e);
+          });
+      });
     } else {
       return this.handleError();
     }
@@ -160,7 +199,7 @@ class GmailApi {
   }
 
   // Update SignIn property
-  updateSignInStatus(isSignedIn) {
+  updateSigninStatus(isSignedIn) {
     this.signIn = isSignedIn;
   }
 
@@ -218,8 +257,8 @@ class GmailApi {
   initClient() {
     try {
       gapi.client.init(config).then(() => {
-        this.listenSign(this.updateSignInStatus);
-        this.updateSignInStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+        this.listenSign(this.updateSigninStatus);
+        this.updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
         if (!!this.listenCallback) {
           this.listenSign(this.listenCallback);
           this.listenCallback(gapi.auth2.getAuthInstance().isSignedIn.get());

@@ -44,12 +44,25 @@ For getting message ids:
 
 ```javascript
  /**
-   * @param {boolean} unread
-   * @param {integer} maxResults
-   * @param {string} userId
+   * @param {boolean} [unread=false]
+   * @param {number} [maxResults=10]
+   * @param {string} [userId="me"]
    * @returns {Promise} Array: [ {id, threadId} ]
    */
   getMessageIds(unread = false, maxResults = 10, userId = "me").then(...)
+```
+
+##### getMessagesByIds
+
+For getting message data by array of ids or by string id:
+
+```javascript
+ /**
+   * @param {[string] | string} ids
+   * @param {string} [userId="me"]
+   * @returns {Promise} [{id, labelIds, snippet, internalDate, payload}] | {...}
+   */
+  getMessagesFromIds(ids, userId = "me").then(...)
 ```
 
 ##### getMessages
@@ -58,11 +71,12 @@ For getting message data:
 
 ```javascript
  /**
-   * @param {[string] | string} ids
-   * @param {string} userId
+   * @param {boolean} [unread=false]
+   * @param {number} [maxResults=10]
+   * @param {string} [userId="me"]
    * @returns {Promise} [{id, labelIds, snippet, internalDate, payload}] | {...}
    */
-  getMessages(ids, userId = "me").then(...)
+  getMessages(unread = false, maxResults = 10, userId = "me").then(...)
 ```
 
 ##### listenSign
@@ -137,12 +151,19 @@ class SomeComponent extends React.Component {
     }
 
     getMessages = () => {
-        gmailApi.getMessagesIds().then((resIds) => {
-            gmailApi.getMessages(gmailApi.getArrayOfIds(resIds)).then((resMessages) => {
-                this.setState({messages: resMessages})
-            }
-        }
+        gmailApi.getMessages(true, 5).then(res => {
+          this.setState({ messages: gmailApi.normalizeData(res) });
+        });
     }
+
+    // Another way to get messages by ids
+    // getMessages = () => {
+    //   gmailApi.getMessageIds(false, 5).then(resIds => {
+    //     gmailApi.getMessages(gmailApi.getArrayOfIds(resIds)).then(res => {
+    //       this.setState({ messages: gmailApi.normalizeData(res) });
+    //     });
+    //   });
+    // }
 
     render() {
         const {messages} = this.state
