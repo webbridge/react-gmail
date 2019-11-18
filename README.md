@@ -77,17 +77,6 @@ For listening your sign status
 listenSign(callback);
 ```
 
-For getting message data:
-
-```javascript
- /**
-   * @param {[string] | string} ids
-   * @param {string} userId
-   * @returns {Promise} [{id, labelIds, snippet, internalDate, payload}] | {...}
-   */
-  getMessages(ids, userId = "me").then(...)
-```
-
 ##### getArrayOfIds
 
 For converting object to array of ids _(using for prepare array of ids for getMessages method)_:
