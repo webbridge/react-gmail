@@ -197,12 +197,12 @@ class SomeComponent extends React.Component {
         <button onCLick={this.getMessages}>Get Messages</button>
         <ul>
           {messages.map(message => (
-            <li key="message.result.id">
+            <li key="message.id">
               <div>
                 <span>
-                  {message.result.subject}: {message.result.snippet}
+                  {message.subject}: {message.snippet}
                 </span>
-                <p>{message.result.date}</p>
+                <p>{message.date}</p>
               </div>
             </li>
           ))}
@@ -228,7 +228,7 @@ class SomeComponent extends React.Component {
 
   getMessages = () => {
     gmailApi.getThreadsList().then(res => {
-      this.setState({ messages: res });
+      this.setState({ messages: res.result.threads });
     });
   };
 
@@ -239,7 +239,7 @@ class SomeComponent extends React.Component {
         <button onCLick={this.getMessages}>Get Snippets from messages</button>
         <ul>
           {messages.map(message => (
-            <li key="message.result.id">{message.result.snippet}</li>
+            <li key="message.id">{message.snippet}</li>
           ))}
         </ul>
       </div>
