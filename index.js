@@ -57,12 +57,12 @@ class GmailApi {
    * @param {string} userId
    * @returns {Promise} [{id, labelIds, snippet, internalDate, payload}] | {...}
    */
-  getMessagesByIds(ids, userId = "me") {
+  getMessagesByIds(id, userId = "me") {
     if (this.signIn) {
-      if (typeof ids === "string") {
-        return gapi.client.gmail.users.messages.get({ userId, id: ids });
+      if (typeof id === "string") {
+        return gapi.client.gmail.users.messages.get({ userId, id });
       } else {
-        return Promise.all(ids.map(id => gapi.client.gmail.users.messages.get({ userId, id })));
+        return Promise.all(id.map(id => gapi.client.gmail.users.messages.get({ userId, id })));
       }
     } else {
       return this.handleError();
@@ -102,6 +102,35 @@ class GmailApi {
             reject(e);
           });
       });
+    } else {
+      return this.handleError();
+    }
+  }
+
+  /**
+   * Get list of snippets from the last threads
+   * @param {string} userId
+   * @returns {Promise} [{id, snippet, historyId}]
+   */
+  getThreadsList(userId = "me") {
+    if (this.signIn) {
+      return gapi.client.gmail.users.threads.list({ userId });
+    } else {
+      return this.handleError();
+    }
+  }
+
+  /**
+   * @param {string | array} id
+   * @param {*} userId
+   */
+  getThreads(id, userId = "me") {
+    if (this.signIn) {
+      if (typeof id === "string") {
+        return gapi.client.gmail.users.threads.get({ userId, id });
+      } else {
+        return Promise.all(id.map(id => gapi.client.gmail.users.threads.get({ userId, id })));
+      }
     } else {
       return this.handleError();
     }

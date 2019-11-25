@@ -79,6 +79,31 @@ For getting message data:
   getMessages(unread = false, maxResults = 10, userId = "me").then(...)
 ```
 
+##### getThreadsList
+
+For getting threads list data (returned array of {id, snippet, historyId}):
+
+```javascript
+/**
+ * Get list of snippets from the last threads
+ * @param {string} userId
+ * @returns {Promise} [{id, snippet, historyId}]
+ */
+getThreadsList(userId = "me").then(...);
+```
+
+##### getThreads
+
+For getting threads:
+
+```javascript
+/**
+ * @param {string | array} id
+ * @param {*} userId
+ */
+getThreads(id, userId = "me").then(...);
+```
+
 ##### listenSign
 
 For listening your sign status
@@ -142,44 +167,84 @@ getMetaFromHeaders(data);
 ##### getMessages
 
 ```javascript
-import React from 'react'
-import gmailApi from 'react-api'
+import React from "react";
+import gmailApi from "react-api";
 
 class SomeComponent extends React.Component {
-    state = {
-        messages: []
-    }
+  state = {
+    messages: []
+  };
 
-    getMessages = () => {
-        gmailApi.getMessages(true, 5).then(res => {
-          this.setState({ messages: gmailApi.normalizeData(res) });
-        });
-    }
+  getMessages = () => {
+    gmailApi.getMessages(true, 5).then(res => {
+      this.setState({ messages: gmailApi.normalizeData(res) });
+    });
+  };
 
-    // Another way to get messages by ids
-    // getMessages = () => {
-    //   gmailApi.getMessageIds(false, 5).then(resIds => {
-    //     gmailApi.getMessages(gmailApi.getArrayOfIds(resIds)).then(res => {
-    //       this.setState({ messages: gmailApi.normalizeData(res) });
-    //     });
-    //   });
-    // }
+  // Another way to get messages by ids
+  // getMessages = () => {
+  //   gmailApi.getMessageIds(false, 5).then(resIds => {
+  //     gmailApi.getMessages(gmailApi.getArrayOfIds(resIds)).then(res => {
+  //       this.setState({ messages: gmailApi.normalizeData(res) });
+  //     });
+  //   });
+  // }
 
-    render() {
-        const {messages} = this.state
-        return (
-            <div>
-                <button onCLick={this.getMessages}>Get Messages</button>
-                <ul>
-                {messages.map((message) => (
-                    <li key="message.result.id">
-                        {message.result.snippet}
-                    </li>
-                )
-                </ul>
-            </div>
-        )
-    }
+  render() {
+    const { messages } = this.state;
+    return (
+      <div>
+        <button onCLick={this.getMessages}>Get Messages</button>
+        <ul>
+          {messages.map(message => (
+            <li key="message.result.id">{message.result.snippet}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+}
+```
+
+##### getThreads
+
+If you want to get just snippets from messages, the better way it's using getThreadsList method:
+
+```javascript
+import React from "react";
+import gmailApi from "react-api";
+
+class SomeComponent extends React.Component {
+  state = {
+    messages: []
+  };
+
+  getMessages = () => {
+    gmailApi.getThreadsList().then(res => {
+      this.setState({ messages: res });
+    });
+  };
+
+  render() {
+    const { messages } = this.state;
+    return (
+      <div>
+        <button onCLick={this.getMessages}>Get Snippets from messages</button>
+        <ul>
+          {messages.map(message => (
+            <li key="message.result.id">
+              <div>
+                <span>
+                  {message.result.subject}: {message.result.snippet}
+                </span>
+                <p>{message.result.date}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
 }
 ```
 
