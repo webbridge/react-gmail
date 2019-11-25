@@ -112,7 +112,7 @@ class GmailApi {
    * @param {string} userId
    * @returns {Promise} [{id, snippet, historyId}]
    */
-  getThreadsList(maxResults = 10, userId = "me") {
+  getThreadsList(unread = false, maxResults = 10, userId = "me") {
     if (this.signIn) {
       let q = "";
       if (!!unread) {
