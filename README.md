@@ -99,7 +99,7 @@ For getting threads:
 ```javascript
 /**
  * @param {string | array} id
- * @param {*} userId
+ * @param {Promise} userId
  */
 getThreads(id, userId = "me").then(...);
 ```
@@ -197,7 +197,14 @@ class SomeComponent extends React.Component {
         <button onCLick={this.getMessages}>Get Messages</button>
         <ul>
           {messages.map(message => (
-            <li key="message.result.id">{message.result.snippet}</li>
+            <li key="message.result.id">
+              <div>
+                <span>
+                  {message.result.subject}: {message.result.snippet}
+                </span>
+                <p>{message.result.date}</p>
+              </div>
+            </li>
           ))}
         </ul>
       </div>
@@ -232,14 +239,7 @@ class SomeComponent extends React.Component {
         <button onCLick={this.getMessages}>Get Snippets from messages</button>
         <ul>
           {messages.map(message => (
-            <li key="message.result.id">
-              <div>
-                <span>
-                  {message.result.subject}: {message.result.snippet}
-                </span>
-                <p>{message.result.date}</p>
-              </div>
-            </li>
+            <li key="message.result.id">{message.result.snippet}</li>
           ))}
         </ul>
       </div>

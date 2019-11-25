@@ -122,7 +122,7 @@ class GmailApi {
 
   /**
    * @param {string | array} id
-   * @param {*} userId
+   * @param {Promise} userId
    */
   getThreads(id, userId = "me") {
     if (this.signIn) {
