@@ -89,13 +89,13 @@ class GmailApi {
             if (typeof ids === "string") {
               resolve(gapi.client.gmail.users.messages.get({ userId, id: resIds.result.id }));
             } else {
-              resolve(
-                Promise.all(
-                  resIds.result.messages.map(({ id }) =>
-                    gapi.client.gmail.users.messages.get({ userId, id })
-                  )
-                )
-              );
+              let resData = [];
+              if (resIds.result.hasOwnProperty("messages")) {
+                resData = Promise.all(
+                  resIds.result.messages.map(({ id }) => gapi.client.gmail.users.messages.get({ userId, id }))
+                );
+              }
+              resolve(resData);
             }
           })
           .catch(e => {
@@ -329,13 +329,13 @@ const notification = message => {
     notificationBlock.appendChild(notificationText);
     notificationBlock.appendChild(signInButton);
     setTimeout(() => {
-      notificationBlock.style.opacity = "0";
+      notificationBlock.style.display = "none";
     }, 5000);
   } else {
     document.getElementById(textBlockId).innerText = message;
-    notificationElement.style.opacity = "1";
+    notificationElement.style.display = "block";
     setTimeout(() => {
-      notificationElement.style.opacity = "0";
+      notificationElement.style.display = "none";
     }, 5000);
   }
 };
