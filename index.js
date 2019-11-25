@@ -112,9 +112,13 @@ class GmailApi {
    * @param {string} userId
    * @returns {Promise} [{id, snippet, historyId}]
    */
-  getThreadsList(userId = "me") {
+  getThreadsList(maxResults = 10, userId = "me") {
     if (this.signIn) {
-      return gapi.client.gmail.users.threads.list({ userId });
+      let q = "";
+      if (!!unread) {
+        q = "is:unread";
+      }
+      return gapi.client.gmail.users.threads.list({ userId, maxResults, q });
     } else {
       return this.handleError();
     }
