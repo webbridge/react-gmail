@@ -58,9 +58,9 @@ For getting message data by array of ids or by string id:
 
 ```javascript
  /**
-   * @param {[string] | string} ids
+   * @param {[string] | string} id
    * @param {string} [userId="me"]
-   * @returns {Promise} [{id, labelIds, snippet, internalDate, payload}] | {...}
+   * @returns {Promise} [{id, labelId, snippet, internalDate, payload}] | {...}
    */
   getMessagesFromIds(ids, userId = "me").then(...)
 ```

@@ -53,9 +53,9 @@ class GmailApi {
 
   /**
    * Get messages by array of ids
-   * @param {[string] | string} ids
+   * @param {[string] | string} id
    * @param {string} userId
-   * @returns {Promise} [{id, labelIds, snippet, internalDate, payload}] | {...}
+   * @returns {Promise} [{id, labelId, snippet, internalDate, payload}] | {...}
    */
   getMessagesByIds(id, userId = "me") {
     if (this.signIn) {
@@ -109,7 +109,9 @@ class GmailApi {
 
   /**
    * Get list of snippets from the last threads
-   * @param {string} userId
+   * @param {boolean} [unread=false]
+   * @param {number} [maxResults=10]
+   * @param {string} [userId="me"]
    * @returns {Promise} [{id, snippet, historyId}]
    */
   getThreadsList(unread = false, maxResults = 10, userId = "me") {
