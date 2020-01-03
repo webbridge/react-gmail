@@ -168,7 +168,7 @@ getMetaFromHeaders(data);
 
 ```javascript
 import React from "react";
-import gmailApi from "react-api";
+import gmailApi from "react-gmail";
 
 class SomeComponent extends React.Component {
   state = {
@@ -219,7 +219,7 @@ If you want to get just snippets from messages, the better way it's using getThr
 
 ```javascript
 import React from "react";
-import gmailApi from "react-api";
+import gmailApi from "react-gmail";
 
 class SomeComponent extends React.Component {
   state = {
@@ -260,7 +260,7 @@ gmailApi.getProfile().then(resProfile => {
 
 ```javascript
 import React from "react";
-import gmailApi from "react-api";
+import gmailApi from "react-gmail";
 
 class SomeComponent extends React.Component {
   state = {
@@ -291,7 +291,7 @@ For customizing signIn & signOut you can use `handleSignIn` and `handleSignOut` 
 
 ```javascript
 import React from "react";
-import gmailApi from "react-api";
+import gmailApi from "react-gmail";
 
 class SomeComponent extends React.Component {
   state = {
