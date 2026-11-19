@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="react-gmail">
+  <!-- React-style orbits -->
+  <g fill="none" stroke="#61DAFB" stroke-width="3.5">
+    <ellipse cx="50" cy="50" rx="46" ry="17"/>
+    <ellipse cx="50" cy="50" rx="46" ry="17" transform="rotate(60 50 50)"/>
+    <ellipse cx="50" cy="50" rx="46" ry="17" transform="rotate(120 50 50)"/>
+  </g>
+  <!-- Envelope as the nucleus -->
+  <rect x="27" y="34" width="46" height="32" rx="6" fill="#fff" stroke="#61DAFB" stroke-width="3.5"/>
+  <!-- Gmail-style M, built from the four colours -->
+  <g fill="none" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M34 60V44" stroke="#4285F4"/>
+    <path d="M66 60V44" stroke="#34A853"/>
+    <path d="M34 42l4 3" stroke="#C5221F"/>
+    <path d="M66 42l-4 3" stroke="#FBBC04"/>
+    <path d="M38 45l12 9 12-9" stroke="#EA4335"/>
+  </g>
+</svg>
