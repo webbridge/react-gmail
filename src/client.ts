@@ -24,16 +24,17 @@ export function createGmailClient({ clientId, scopes = [DEFAULT_SCOPE] }: GmailC
     return res.json();
   }
 
-  const list = <T>(path: string, key: string, p?: ListParams): Promise<ListResult<T>> =>
-    get<any>(path, { maxResults: 10, ...p }).then((r) => ({ items: r[key] || [], nextPageToken: r.nextPageToken }));
+  // Gmail's list responses use the endpoint name as the key: /messages -> { messages }, /threads -> { threads }.
+  const list = <T>(path: string, p?: ListParams): Promise<ListResult<T>> =>
+    get<any>(path, { maxResults: 10, ...p }).then((r) => ({ items: r[path] || [], nextPageToken: r.nextPageToken }));
 
   return {
     ...auth,
     get,
     getProfile: () => get<Profile>("profile"),
-    listMessages: (p?: ListParams) => list<Pick<Message, "id" | "threadId">>("messages", "messages", p),
+    listMessages: (p?: ListParams) => list<Pick<Message, "id" | "threadId">>("messages", p),
     getMessage: (id: string, format: Format = "full") => get<Message>("messages/" + encodeURIComponent(id), { format }),
-    listThreads: (p?: ListParams) => list<Thread>("threads", "threads", p),
+    listThreads: (p?: ListParams) => list<Thread>("threads", p),
     getThread: (id: string) => get<Thread>("threads/" + encodeURIComponent(id)),
   };
 }

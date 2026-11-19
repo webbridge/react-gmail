@@ -11,7 +11,7 @@ const loadGis = () =>
     s.onload = () => ok();
     s.onerror = () => {
       loading = undefined;
-      fail(err("network", "Failed to load Google Identity Services"));
+      fail(err("network", "GIS load failed"));
     };
     document.head.append(s);
   }));
@@ -27,7 +27,7 @@ export function createAuth(clientId: string, scope: string) {
     isSignedIn,
     /** Valid token or throws not_authenticated. Never opens a popup. */
     token() {
-      if (!isSignedIn()) throw err("not_authenticated", "Not signed in or token expired");
+      if (!isSignedIn()) throw err("not_authenticated", "Not signed in");
       return token;
     },
     /** Opens the consent popup (call from a user gesture). */
@@ -39,7 +39,7 @@ export function createAuth(clientId: string, scope: string) {
             client_id: clientId,
             scope,
             callback: (r) => {
-              if (!r.access_token) return fail(err("auth_failed", r.error_description || r.error || "Sign-in failed"));
+              if (!r.access_token) return fail(err("auth_failed", r.error_description || r.error));
               token = r.access_token;
               exp = Date.now() + +r.expires_in * 1e3;
               emit();

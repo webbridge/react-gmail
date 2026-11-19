@@ -6,10 +6,10 @@ Tiny, typed Gmail API client for the browser, built on [Google Identity Services
 
   | Import | Size (min + gzip) |
   |---|---|
-  | `createGmailClient` (sign-in + Gmail API) | ~1.0 kB |
-  | `createAuth` (sign-in only) | ~0.6 kB |
-  | `parseMessage` (message parsing only) | ~0.4 kB |
-  | everything | ~1.5 kB |
+  | `createGmailClient` (sign-in + Gmail API) | ~0.99 kB |
+  | `createAuth` (sign-in only) | ~0.55 kB |
+  | `parseMessage` (message parsing only) | ~0.39 kB |
+  | everything | ~1.48 kB |
 
 - **Modern Google sign-in.** Uses Google Identity Services, which replaced the shut-down `gapi.auth2`.
 - **Fully typed.** TypeScript types for messages, threads, profile and errors.

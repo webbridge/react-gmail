@@ -1,6 +1,6 @@
 {
   "name": "react-gmail",
-  "version": "2.0.0-beta.0",
+  "version": "2.0.0",
   "description": "Tiny Gmail API client for the browser and React, built on Google Identity Services",
   "type": "module",
   "types": "./dist/index.d.ts",
