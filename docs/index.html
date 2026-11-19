@@ -1,0 +1,1298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>react-gmail</title>
+<meta name="description" content="Tiny, typed Gmail API client for the browser and React, built on Google Identity Services. Interactive demo with mocked data and a setup guide." />
+<link rel="icon" type="image/svg+xml" href="logo.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: #f6f7f9;
+  --card: #ffffff;
+  --sunken: #f1f3f6;
+  --text: #1c1f26;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --accent: #2563eb;
+  --accent-ink: #ffffff;
+  --accent-soft: #e8efff;
+  --ok: #15803d;
+  --ok-soft: #e7f6ec;
+  --warn: #b45309;
+  --warn-soft: #fdf3e2;
+  --danger: #dc2626;
+  --danger-soft: #fdecec;
+  --code-bg: #0f1420;
+  --code-text: #dbe2f0;
+  --tk-key: #c792ea;
+  --tk-str: #a5d6a7;
+  --tk-num: #f7a76c;
+  --tk-com: #6b7790;
+  --tk-prop: #82aaff;
+  --radius: 12px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1115;
+    --card: #171a21;
+    --sunken: #12151b;
+    --text: #e6e8ee;
+    --muted: #8b93a3;
+    --line: #262b36;
+    --accent: #6b9bff;
+    --accent-ink: #0b1020;
+    --accent-soft: #1b2744;
+    --ok: #4ade80;
+    --ok-soft: #12261a;
+    --warn: #fbbf24;
+    --warn-soft: #2a2110;
+    --danger: #f87171;
+    --danger-soft: #3a1c1f;
+    --code-bg: #0b0e14;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1115;
+  --card: #171a21;
+  --sunken: #12151b;
+  --text: #e6e8ee;
+  --muted: #8b93a3;
+  --line: #262b36;
+  --accent: #6b9bff;
+  --accent-ink: #0b1020;
+  --accent-soft: #1b2744;
+  --ok: #4ade80;
+  --ok-soft: #12261a;
+  --warn: #fbbf24;
+  --warn-soft: #2a2110;
+  --danger: #f87171;
+  --danger-soft: #3a1c1f;
+  --code-bg: #0b0e14;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.6 var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code { font-family: var(--mono); font-size: 0.9em; }
+:not(pre) > code {
+  background: var(--sunken);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 5px;
+  overflow-wrap: anywhere;
+}
+h1, h2, h3 { line-height: 1.2; letter-spacing: -0.01em; }
+h2 { font-size: 28px; margin: 0 0 8px; }
+h3 { font-size: 17px; margin: 0 0 6px; }
+p { margin: 0 0 12px; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+.muted { color: var(--muted); }
+.lede { color: var(--muted); font-size: 16px; max-width: 680px; margin-bottom: 28px; }
+section { padding: 72px 0 0; }
+section:last-of-type { padding-bottom: 72px; }
+
+/* nav */
+.nav {
+  position: sticky; top: 0; z-index: 20;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.nav .wrap { display: flex; align-items: center; gap: 20px; height: 56px; }
+/* Same wordmark as examples/react-app */
+.logo {
+  display: flex; align-items: center;
+  font-family: "Outfit", system-ui, sans-serif; font-weight: 600;
+  font-size: 24px; letter-spacing: -0.02em; line-height: 1; white-space: nowrap;
+}
+.logo:hover { text-decoration: none; }
+.wm-react { color: var(--accent); }
+.wm-gmail { color: var(--text); }
+.nav-links { display: flex; gap: 18px; margin-left: auto; font-size: 14px; }
+.nav-links a { color: var(--muted); }
+.nav-links a:hover { color: var(--text); text-decoration: none; }
+.theme-btn {
+  border: 1px solid var(--line); background: var(--card); color: var(--muted);
+  width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: grid; place-items: center;
+}
+.theme-btn svg { width: 16px; height: 16px; }
+@media (max-width: 720px) { .nav-links .opt { display: none; } }
+@media (max-width: 440px) {
+  .nav .wrap { gap: 12px; }
+  .nav-links { gap: 12px; }
+  .install { font-size: 13px; max-width: 100%; }
+}
+
+/* hero */
+.hero { padding: 72px 0 8px; }
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; color: var(--muted);
+  border: 1px solid var(--line); background: var(--card);
+  border-radius: 999px; padding: 3px 12px; margin-bottom: 20px;
+}
+.pill b { color: var(--ok); font-weight: 600; }
+.hero h1 { font-size: clamp(34px, 6vw, 54px); margin: 0 0 16px; letter-spacing: -0.02em; }
+.hero h1 span { color: var(--accent); }
+.hero .lede { font-size: 18px; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 36px; }
+.install {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: var(--code-bg); color: var(--code-text);
+  font-family: var(--mono); font-size: 14px;
+  border-radius: 10px; padding: 10px 10px 10px 16px;
+}
+.install .dollar { color: var(--tk-com); }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  font: 600 14px/1 var(--sans);
+  border-radius: 9px; padding: 11px 16px;
+  border: 1px solid var(--line); background: var(--card); color: var(--text);
+  cursor: pointer; white-space: nowrap;
+}
+.btn:hover { text-decoration: none; border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.sm { padding: 7px 11px; font-size: 13px; border-radius: 8px; }
+.btn.ghost { background: transparent; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.copy {
+  border: 0; background: rgba(255,255,255,0.08); color: var(--code-text);
+  font: 12px var(--sans); padding: 5px 9px; border-radius: 6px; cursor: pointer;
+}
+.copy:hover { background: rgba(255,255,255,0.16); }
+
+.facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.fact { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+.fact b { display: block; font-size: 22px; letter-spacing: -0.01em; }
+.fact span { color: var(--muted); font-size: 13px; }
+@media (max-width: 760px) { .facts { grid-template-columns: repeat(2, 1fr); } }
+
+/* how it works */
+.flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; counter-reset: step; }
+.flow-step {
+  position: relative; background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 18px 16px 16px;
+}
+.flow-step::before {
+  counter-increment: step; content: counter(step);
+  display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 13px; margin-bottom: 10px;
+}
+.flow-step p { color: var(--muted); font-size: 14px; margin: 0; }
+.flow-step code { font-size: 12.5px; }
+@media (max-width: 860px) { .flow { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .flow { grid-template-columns: 1fr; } }
+
+/* demo */
+.notice {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: var(--warn-soft); color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent);
+  border-radius: 10px; padding: 10px 14px; font-size: 14px; margin-bottom: 16px;
+}
+.notice svg { flex: none; width: 18px; height: 18px; stroke: var(--warn); margin-top: 2px; }
+.demo { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; align-items: start; }
+@media (max-width: 960px) { .demo { grid-template-columns: 1fr; } }
+.app {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  overflow: hidden; min-height: 560px; display: flex; flex-direction: column;
+}
+.app-bar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 14px; border-bottom: 1px solid var(--line); background: var(--sunken);
+}
+.dots { display: flex; gap: 6px; }
+.dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+.app-title { font-weight: 600; font-size: 14px; }
+.who { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.avatar {
+  width: 28px; height: 28px; border-radius: 50%; flex: none;
+  display: grid; place-items: center; font-weight: 700; font-size: 12px; color: #fff;
+}
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.status-dot.on { background: var(--ok); }
+
+.signed-out { flex: 1; display: grid; place-items: center; text-align: center; padding: 40px 20px; }
+.signed-out h3 { font-size: 20px; margin-bottom: 8px; }
+.signed-out p { color: var(--muted); max-width: 380px; margin: 0 auto 20px; }
+.g-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  border: 1px solid var(--line); background: var(--card); color: var(--text);
+  font: 600 14px var(--sans); border-radius: 999px; padding: 10px 18px; cursor: pointer;
+}
+.g-btn:hover { border-color: var(--muted); }
+.g-btn svg { width: 18px; height: 18px; stroke: var(--accent); }
+
+.signed-in { display: none; flex: 1; flex-direction: column; min-height: 0; }
+.app.on .signed-in { display: flex; }
+.app.on .signed-out { display: none; }
+
+.profile {
+  display: flex; flex-wrap: wrap; gap: 6px 20px; padding: 10px 14px;
+  border-bottom: 1px solid var(--line); font-size: 13px; color: var(--muted);
+}
+.profile b { color: var(--text); font-weight: 600; }
+.search { display: flex; gap: 8px; padding: 12px 14px 8px; flex-wrap: wrap; }
+.search-box {
+  flex: 1 1 220px; display: flex; align-items: center; gap: 8px;
+  border: 1px solid var(--line); background: var(--sunken); border-radius: 9px; padding: 0 10px;
+}
+.search-box:focus-within { border-color: var(--accent); }
+.search-box svg { width: 16px; height: 16px; stroke: var(--muted); flex: none; }
+.search-box input {
+  flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text);
+  font: 14px var(--mono); padding: 9px 0;
+}
+select {
+  border: 1px solid var(--line); background: var(--card); color: var(--text);
+  font: 13px var(--sans); border-radius: 8px; padding: 0 8px; height: 36px;
+}
+.chips { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 14px 10px; }
+.chip {
+  border: 1px solid var(--line); background: transparent; color: var(--muted);
+  font: 12px var(--mono); border-radius: 999px; padding: 3px 10px; cursor: pointer;
+}
+.chip:hover { color: var(--text); border-color: var(--muted); }
+
+.panes { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); border-top: 1px solid var(--line); flex: 1; min-height: 380px; }
+@media (max-width: 680px) { .panes { grid-template-columns: 1fr; } .reader { border-left: 0; border-top: 1px solid var(--line); } }
+.list { overflow: auto; max-height: 460px; }
+.list-empty { padding: 28px 16px; color: var(--muted); font-size: 14px; text-align: center; }
+.row {
+  display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line);
+  background: transparent; color: var(--text); padding: 11px 14px; cursor: pointer; font: inherit;
+}
+.row:hover { background: var(--sunken); }
+.row.sel { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+.row-top { display: flex; gap: 8px; align-items: baseline; font-size: 13.5px; }
+.row-from { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row.unread .row-from, .row.unread .row-subj { font-weight: 700; }
+.row-date { color: var(--muted); font-size: 12px; flex: none; }
+.row-subj { font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-snip { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.clip { width: 12px; height: 12px; stroke: var(--muted); vertical-align: -1px; }
+.pager { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; font-size: 12.5px; color: var(--muted); }
+
+.reader { border-left: 1px solid var(--line); min-width: 0; display: flex; flex-direction: column; }
+.reader-empty { flex: 1; display: grid; place-items: center; color: var(--muted); font-size: 14px; padding: 24px; text-align: center; }
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); padding: 0 10px; overflow-x: auto; }
+.tab {
+  border: 0; background: transparent; color: var(--muted); cursor: pointer;
+  font: 600 13px var(--sans); padding: 11px 10px; border-bottom: 2px solid transparent; white-space: nowrap;
+}
+.tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
+.tab code { font-weight: 400; background: none; border: 0; padding: 0; }
+.reader-body { padding: 16px; overflow: auto; max-height: 420px; }
+.msg-subj { font-size: 18px; margin: 0 0 10px; }
+.msg-meta { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; font-size: 13px; }
+.msg-meta .muted { font-size: 12px; }
+.msg-frame { width: 100%; border: 1px solid var(--line); border-radius: 8px; background: #fff; height: 220px; }
+.atts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.att {
+  display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px;
+  border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; background: var(--sunken);
+}
+.att svg { width: 14px; height: 14px; stroke: var(--muted); }
+.hint { font-size: 12px; color: var(--muted); margin-top: 10px; }
+
+.err {
+  display: none; margin: 0 14px 10px; padding: 10px 12px; border-radius: 9px;
+  background: var(--danger-soft); color: var(--text); font-size: 13.5px;
+  border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+  align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.err.show { display: flex; }
+.err code { color: var(--danger); }
+.app-foot { display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 14px; border-top: 1px solid var(--line); background: var(--sunken); }
+
+/* console */
+.console {
+  background: var(--code-bg); color: var(--code-text); border-radius: var(--radius);
+  font: 12.5px/1.55 var(--mono); display: flex; flex-direction: column; height: 100%; min-height: 560px; max-height: 720px;
+}
+.console-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.08); font-family: var(--sans); font-size: 13px;
+}
+.console-head b { font-weight: 600; }
+.console-log { overflow: auto; padding: 10px 14px; flex: 1; }
+.entry { padding: 8px 0; border-bottom: 1px dashed rgba(255,255,255,0.08); }
+.entry:last-child { border-bottom: 0; }
+.entry-call { color: #fff; word-break: break-word; }
+.entry-call .ms { color: var(--tk-com); float: right; margin-left: 8px; }
+.entry-res { color: var(--tk-com); margin-top: 3px; white-space: pre-wrap; word-break: break-word; }
+.entry-res.ok::before { content: "→ "; color: var(--tk-str); }
+.entry-res.bad { color: #ff8a80; }
+.entry-res.bad::before { content: "✕ "; }
+.entry-net { color: var(--tk-prop); font-size: 11.5px; margin-top: 3px; word-break: break-all; }
+.entry.pending .entry-res::before { content: "… "; }
+
+/* mock consent */
+.modal-bg {
+  position: fixed; inset: 0; z-index: 50; background: rgba(10,12,18,0.55);
+  display: none; place-items: center; padding: 16px;
+}
+.modal-bg.show { display: grid; }
+.modal {
+  width: 100%; max-width: 400px; background: var(--card); color: var(--text);
+  border-radius: 14px; border: 1px solid var(--line); box-shadow: 0 24px 60px rgba(0,0,0,0.3); overflow: hidden;
+}
+.modal-tag {
+  background: var(--warn-soft); color: var(--warn); font-size: 12px; font-weight: 600;
+  padding: 6px 16px; text-align: center;
+}
+.modal-body { padding: 22px 22px 18px; }
+.modal h3 { font-size: 19px; margin-bottom: 4px; }
+.modal .acct {
+  display: flex; align-items: center; gap: 10px; border: 1px solid var(--line);
+  border-radius: 999px; padding: 6px 12px 6px 6px; margin: 14px 0; font-size: 13.5px; width: max-content; max-width: 100%;
+}
+.scope {
+  display: flex; gap: 10px; align-items: flex-start; padding: 12px; border-radius: 10px;
+  background: var(--sunken); font-size: 13.5px; margin-bottom: 8px;
+}
+.scope svg { width: 18px; height: 18px; stroke: var(--accent); flex: none; margin-top: 1px; }
+.scope small { display: block; color: var(--muted); font-family: var(--mono); font-size: 11.5px; word-break: break-all; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 0 22px 20px; }
+
+/* setup */
+.steps { display: grid; gap: 12px; counter-reset: s; }
+.step {
+  display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 4px 14px;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px;
+}
+/* Number sits in column 1; every child goes in column 2, however many there are. */
+.step > * { grid-column: 2; }
+.step::before {
+  counter-increment: s; content: counter(s);
+  grid-column: 1; grid-row: 1 / span 2; width: 36px; height: 36px; border-radius: 10px;
+  display: grid; place-items: center; font-weight: 700;
+  background: var(--accent); color: var(--accent-ink);
+}
+.step ul, .step ol { margin: 6px 0 0; padding-left: 20px; }
+.step li { margin-bottom: 4px; }
+.step .path { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.step .path b { color: var(--text); font-weight: 600; }
+.kv {
+  display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px;
+  background: var(--sunken); border: 1px solid var(--line); border-radius: 10px;
+  padding: 12px 14px; margin: 10px 0 0; font-size: 13.5px;
+}
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 560px) { .step { grid-template-columns: 1fr; } .step > *, .step::before { grid-column: 1; } .step::before { grid-row: auto; margin-bottom: 8px; } .kv { grid-template-columns: 1fr; } .kv dd { margin-bottom: 6px; } }
+.callout {
+  border-left: 3px solid var(--accent); background: var(--accent-soft);
+  border-radius: 0 10px 10px 0; padding: 12px 16px; font-size: 14px; margin-top: 16px;
+}
+.callout.warn { border-left-color: var(--warn); background: var(--warn-soft); }
+
+/* tables */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); font-weight: 600; background: var(--sunken); }
+tr:last-child td { border-bottom: 0; }
+td code { white-space: nowrap; }
+.tag { display: inline-block; white-space: nowrap; font-size: 11.5px; font-weight: 600; border-radius: 999px; padding: 1px 8px; }
+.tag.r { background: var(--danger-soft); color: var(--danger); }
+.tag.s { background: var(--warn-soft); color: var(--warn); }
+.tag.n { background: var(--ok-soft); color: var(--ok); }
+
+/* code blocks */
+.code {
+  position: relative; background: var(--code-bg); color: var(--code-text);
+  border-radius: var(--radius); overflow: hidden;
+}
+.code-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 8px 10px 8px 16px; border-bottom: 1px solid rgba(255,255,255,0.08);
+  font: 12.5px var(--sans); color: var(--tk-com);
+}
+.code pre { margin: 0; padding: 14px 16px; overflow-x: auto; font: 13px/1.6 var(--mono); }
+.code-tabs { display: flex; gap: 4px; }
+.code-tab {
+  border: 0; background: transparent; color: var(--tk-com); cursor: pointer;
+  font: 600 12.5px var(--sans); padding: 4px 10px; border-radius: 6px;
+}
+.code-tab[aria-selected="true"] { background: rgba(255,255,255,0.1); color: #fff; }
+.tk-k { color: var(--tk-key); }
+.tk-s { color: var(--tk-str); }
+.tk-n { color: var(--tk-num); }
+.tk-c { color: var(--tk-com); font-style: italic; }
+.tk-p { color: var(--tk-prop); }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
+.card ul { margin: 0; padding-left: 18px; }
+.card li { margin-bottom: 6px; font-size: 14px; }
+.sub { margin-top: 32px; margin-bottom: 12px; }
+
+footer { border-top: 1px solid var(--line); padding: 28px 0; color: var(--muted); font-size: 13px; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="react-gmail"><span class="wm-react">react</span><span class="wm-gmail">gmail</span></a>
+    <div class="nav-links">
+      <a href="#how" class="opt">How it works</a>
+      <a href="#demo">Demo</a>
+      <a href="#setup">Setup</a>
+      <a href="#usage" class="opt">Usage</a>
+      <a href="#api" class="opt">API</a>
+      <a href="https://github.com/webbridge/react-gmail">GitHub</a>
+    </div>
+    <button class="theme-btn" id="theme" type="button" aria-label="Toggle color theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </div>
+</nav>
+
+<main id="top">
+  <header class="hero">
+    <div class="wrap">
+      <div class="pill"><b>v2</b> Rewritten on Google Identity Services</div>
+      <h1>Read Gmail from the browser<br />in <span>~1.5 kB</span>.</h1>
+      <p class="lede">react-gmail is a tiny, typed Gmail API client for front-end apps. It signs the user in with Google, calls the Gmail REST API with their token, and turns Gmail's nested MIME messages into plain objects. It works with React or any other framework, and you don't need a backend.</p>
+      <div class="hero-actions">
+        <span class="install"><span><span class="dollar">$</span> npm install react-gmail</span><button class="copy" type="button" data-copy="npm install react-gmail">Copy</button></span>
+        <a class="btn primary" href="#demo">Try the demo</a>
+        <a class="btn" href="#setup">Setup guide</a>
+      </div>
+      <div class="facts">
+        <div class="fact"><b>0</b><span>runtime dependencies</span></div>
+        <div class="fact"><b>~1.5 kB</b><span>min + gzip, everything</span></div>
+        <div class="fact"><b>100%</b><span>TypeScript types</span></div>
+        <div class="fact"><b>No backend</b><span>token stays in memory</span></div>
+      </div>
+    </div>
+  </header>
+
+  <section id="how">
+    <div class="wrap">
+      <h2>What it does</h2>
+      <p class="lede">The library handles four steps that you would otherwise write yourself. The page loads nothing from Google until the user clicks sign in.</p>
+      <div class="flow">
+        <div class="flow-step">
+          <h3>Loads Google sign-in</h3>
+          <p>On the first <code>signIn()</code> it adds Google's GIS script (<code>accounts.google.com/gsi/client</code>) to the page. This happens once. The script is never bundled into your app.</p>
+        </div>
+        <div class="flow-step">
+          <h3>Gets an access token</h3>
+          <p>It opens Google's consent popup for the scopes you asked for. The returned token is kept <b>in memory only</b>, with its ~1 hour expiry tracked.</p>
+        </div>
+        <div class="flow-step">
+          <h3>Calls the Gmail API</h3>
+          <p>Methods like <code>listMessages()</code> are thin <code>fetch</code> calls to <code>gmail.googleapis.com/…/users/me</code>. Every error becomes a typed <code>GmailError</code>.</p>
+        </div>
+        <div class="flow-step">
+          <h3>Parses messages</h3>
+          <p><code>parseMessage()</code> walks the MIME tree, decodes base64url bodies as UTF-8, and returns headers, text, HTML and attachments.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="demo">
+    <div class="wrap">
+      <h2>Interactive demo</h2>
+      <p class="lede">This is a mock inbox built with the library's real API surface. Each click runs the call that a real app would make, and the console on the right shows the call, the HTTP request it sends and the result.</p>
+      <div class="notice">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        <span><b>Everything here is mocked.</b> There is no Google sign-in, no network requests and no real mailbox. The message parsing is real: the raw messages are built in Gmail's format and run through the same <code>parseMessage</code> code the library ships. To try it with your own account, run <a href="https://github.com/webbridge/react-gmail/tree/master/examples/react-app">examples/react-app</a>.</span>
+      </div>
+
+      <div class="demo">
+        <div class="app" id="app">
+          <div class="app-bar">
+            <div class="dots"><i></i><i></i><i></i></div>
+            <span class="app-title">my-app.example</span>
+            <div class="who" id="who"><span class="status-dot" id="dot"></span><span id="who-text">Signed out</span></div>
+          </div>
+
+          <div class="signed-out">
+            <div>
+              <h3>Connect a Gmail account</h3>
+              <p>A real app calls <code>gmail.signIn()</code> from a click handler. Google then shows its consent popup, which is simulated here.</p>
+              <button class="g-btn" id="signin" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+                Sign in with Google
+              </button>
+            </div>
+          </div>
+
+          <div class="signed-in">
+            <div class="profile" id="profile"></div>
+            <form class="search" id="search">
+              <label class="search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <input id="q" type="text" value="in:inbox" spellcheck="false" autocomplete="off" aria-label="Gmail search query" />
+              </label>
+              <select id="max" aria-label="maxResults">
+                <option value="5" selected>maxResults: 5</option>
+                <option value="10">maxResults: 10</option>
+              </select>
+              <button class="btn sm primary" type="submit">listMessages</button>
+            </form>
+            <div class="chips" id="chips">
+              <button class="chip" type="button">is:unread</button>
+              <button class="chip" type="button">has:attachment</button>
+              <button class="chip" type="button">from:maya</button>
+              <button class="chip" type="button">subject:invoice</button>
+              <button class="chip" type="button">in:inbox</button>
+            </div>
+            <div class="err" id="err"></div>
+            <div class="panes">
+              <div>
+                <div class="list" id="list"></div>
+                <div class="pager" id="pager"></div>
+              </div>
+              <div class="reader" id="reader">
+                <div class="reader-empty">Select a message to call <code>getMessage(id)</code>.</div>
+              </div>
+            </div>
+            <div class="app-foot">
+              <button class="btn sm" id="expire" type="button">Simulate token expiry</button>
+              <button class="btn sm ghost" id="signout" type="button">signOut()</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="console">
+          <div class="console-head"><b>Console</b><button class="copy" id="clear" type="button">Clear</button></div>
+          <div class="console-log" id="log"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="setup">
+    <div class="wrap">
+      <h2>Set up Google Cloud</h2>
+      <p class="lede">You need an OAuth <b>client ID</b> before the library can sign anyone in. Setup takes about 5 minutes and is free. You don't need an API key or a client secret.</p>
+
+      <div class="steps">
+        <div class="step">
+          <h3>Create or pick a project</h3>
+          <p class="path">Open <a href="https://console.cloud.google.com/projectcreate">Google Cloud Console</a> → <b>New project</b></p>
+          <p>Any project works. One project per app keeps the consent screen and quotas separate.</p>
+        </div>
+
+        <div class="step">
+          <h3>Enable the Gmail API</h3>
+          <p class="path"><b>APIs &amp; Services → Library</b> → search "Gmail API" → <b>Enable</b></p>
+          <p>If you skip this, every call fails with <code>api_error</code> and status <code>403</code> ("Gmail API has not been used in project …").</p>
+        </div>
+
+        <div class="step">
+          <h3>Configure the OAuth consent screen</h3>
+          <p class="path"><b>APIs &amp; Services → OAuth consent screen</b> (called <b>Google Auth Platform</b> in newer consoles)</p>
+          <ul>
+            <li><b>User type:</b> <i>External</i>, unless everyone who signs in is in your Google Workspace organization.</li>
+            <li><b>App name, support email, developer email:</b> required. Users see these in the popup.</li>
+            <li><b>Scopes:</b> add the Gmail scopes you will request, e.g. <code>…/auth/gmail.readonly</code>.</li>
+            <li><b>Test users:</b> while the app is in <i>Testing</i>, add every Google account that should be able to sign in (up to 100).</li>
+          </ul>
+        </div>
+
+        <div class="step">
+          <h3>Create an OAuth client ID</h3>
+          <p class="path"><b>APIs &amp; Services → Credentials → Create credentials → OAuth client ID</b></p>
+          <dl class="kv">
+            <dt>Application type</dt><dd>Web application</dd>
+            <dt>Authorized JavaScript origins</dt><dd>Every origin your app runs on: <code>http://localhost:5173</code>, <code>https://myapp.com</code>. Enter the origin only, with no path and no trailing slash.</dd>
+            <dt>Authorized redirect URIs</dt><dd>Leave empty. The popup token flow doesn't use them.</dd>
+          </dl>
+          <p style="margin:12px 0 0">Copy the <b>Client ID</b>. It looks like <code>1234567890-abc123.apps.googleusercontent.com</code></p>
+        </div>
+
+        <div class="step">
+          <h3>Pass the client ID to the library</h3>
+          <p>A client ID is <b>not a secret</b>. It ships in your front-end bundle and Google ties it to your authorized origins. An env variable keeps it out of your source code:</p>
+          <div class="code" style="margin-top:8px">
+            <div class="code-head"><span>.env.local</span><button class="copy" type="button" data-copy-next>Copy</button></div>
+            <pre><code data-lang="sh">VITE_GOOGLE_CLIENT_ID=1234567890-abc123.apps.googleusercontent.com</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="sub">Choosing scopes</h3>
+      <p class="muted" style="max-width:720px">The default scope is read-only. Google sorts Gmail scopes into tiers, and the tier decides who can sign in to your app once it leaves <i>Testing</i>:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Scope</th><th>Allows</th><th>Tier</th><th>To go public</th></tr></thead>
+          <tbody>
+            <tr><td><code>gmail.readonly</code> <span class="muted">(default)</span></td><td>Read messages, threads, labels and settings</td><td><span class="tag r">Restricted</span></td><td>App verification plus an annual third-party security assessment</td></tr>
+            <tr><td><code>gmail.metadata</code></td><td>Headers and labels only, no bodies</td><td><span class="tag r">Restricted</span></td><td>Same as above</td></tr>
+            <tr><td><code>gmail.send</code></td><td>Send mail only</td><td><span class="tag s">Sensitive</span></td><td>App verification, no security assessment</td></tr>
+            <tr><td><code>gmail.labels</code></td><td>Manage labels only</td><td><span class="tag n">Non-sensitive</span></td><td>Basic brand verification</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout warn"><b>Testing mode is usually enough.</b> Internal tools, prototypes and personal dashboards can stay in <i>Testing</i> indefinitely, as long as you add the people who use them as test users. Test-user tokens behave the same way: they expire after ~1 hour and the user signs in again.</div>
+
+      <h3 class="sub">Common setup errors</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>You see</th><th>Cause</th><th>Fix</th></tr></thead>
+          <tbody>
+            <tr><td><code>Error 400: origin_mismatch</code> in the popup</td><td>The page's origin isn't listed on the client ID</td><td>Add the exact origin (scheme + host + port) under Authorized JavaScript origins. It can take a few minutes to apply.</td></tr>
+            <tr><td><code>Error 403: access_denied</code></td><td>The app is in Testing and this account isn't a test user</td><td>Add the account under Test users</td></tr>
+            <tr><td><code>api_error</code>, status 403</td><td>Gmail API isn't enabled in the project</td><td>Enable it in APIs &amp; Services → Library</td></tr>
+            <tr><td><code>network</code> on <code>signIn()</code></td><td>An ad blocker or CSP blocked <code>accounts.google.com</code></td><td>Allow Google's GIS script. See <a href="#security">Security</a>.</td></tr>
+            <tr><td>Popup doesn't open</td><td><code>signIn()</code> wasn't called from a user click</td><td>Call it directly inside an <code>onClick</code> handler</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="usage">
+    <div class="wrap">
+      <h2>Usage</h2>
+      <p class="lede">Create one client at module level. In React, read the sign-in state with <code>useSyncExternalStore</code>, so you don't need a provider or context.</p>
+      <div class="code" data-tabs>
+        <div class="code-head">
+          <div class="code-tabs" role="tablist">
+            <button class="code-tab" role="tab" aria-selected="true" type="button">React</button>
+            <button class="code-tab" role="tab" aria-selected="false" type="button">Vanilla</button>
+          </div>
+          <button class="copy" type="button" data-copy-tab>Copy</button>
+        </div>
+<pre><code data-lang="ts">import { useState, useSyncExternalStore } from "react";
+import { createGmailClient, parseMessage, type ParsedMessage } from "react-gmail";
+
+const gmail = createGmailClient({ clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID });
+
+export function Inbox() {
+  const signedIn = useSyncExternalStore(gmail.onAuthChange, gmail.isSignedIn);
+  const [messages, setMessages] = useState&lt;ParsedMessage[]&gt;([]);
+
+  const load = async () =&gt; {
+    const { items } = await gmail.listMessages({ q: "is:unread", maxResults: 10 });
+    const full = await Promise.all(items.map((m) =&gt; gmail.getMessage(m.id)));
+    setMessages(full.map(parseMessage));
+  };
+
+  if (!signedIn) return &lt;button onClick={() =&gt; gmail.signIn()}&gt;Sign in with Google&lt;/button&gt;;
+
+  return (
+    &lt;&gt;
+      &lt;button onClick={load}&gt;Load unread&lt;/button&gt;
+      &lt;button onClick={() =&gt; gmail.signOut()}&gt;Sign out&lt;/button&gt;
+      &lt;ul&gt;
+        {messages.map((m) =&gt; (
+          &lt;li key={m.id}&gt;&lt;b&gt;{m.subject}&lt;/b&gt; from {m.from}: {m.snippet}&lt;/li&gt;
+        ))}
+      &lt;/ul&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+<pre hidden><code data-lang="ts">import { createGmailClient, parseMessage } from "react-gmail";
+
+const gmail = createGmailClient({ clientId: "YOUR_CLIENT_ID.apps.googleusercontent.com" });
+
+// Must run from a user action (click), because it opens Google's popup.
+button.onclick = async () =&gt; {
+  await gmail.signIn();
+
+  const profile = await gmail.getProfile();
+  const { items } = await gmail.listMessages({ q: "is:unread", maxResults: 5 });
+  const messages = await Promise.all(items.map((m) =&gt; gmail.getMessage(m.id)));
+
+  console.log(profile.emailAddress, messages.map(parseMessage));
+};</code></pre>
+      </div>
+
+      <div class="grid2" style="margin-top:16px">
+        <div class="code">
+          <div class="code-head"><span>Pagination</span><button class="copy" type="button" data-copy-next>Copy</button></div>
+<pre><code data-lang="ts">let pageToken: string | undefined;
+do {
+  const page = await gmail.listMessages({ q: "from:billing", pageToken });
+  handle(page.items);
+  pageToken = page.nextPageToken;
+} while (pageToken);</code></pre>
+        </div>
+        <div class="code">
+          <div class="code-head"><span>Other Google APIs (sign-in only)</span><button class="copy" type="button" data-copy-next>Copy</button></div>
+<pre><code data-lang="ts">import { createAuth } from "react-gmail";
+
+const auth = createAuth(CLIENT_ID, "https://www.googleapis.com/auth/calendar.readonly");
+await auth.signIn();
+await fetch(url, { headers: { Authorization: `Bearer ${auth.token()}` } });</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="api">
+    <div class="wrap">
+      <h2>API reference</h2>
+      <p class="lede"><code>createGmailClient({ clientId, scopes? })</code> returns an object with the methods below. All Gmail calls go to <code>users/me</code>.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Method</th><th>Returns / does</th></tr></thead>
+          <tbody>
+            <tr><td><code>signIn()</code></td><td>Opens the consent popup and resolves once a token arrives. Call it from a click.</td></tr>
+            <tr><td><code>signOut()</code></td><td>Clears the token and revokes it with Google.</td></tr>
+            <tr><td><code>isSignedIn()</code></td><td><code>boolean</code>. Becomes <code>false</code> once the token expires (~1 hour).</td></tr>
+            <tr><td><code>onAuthChange(cb)</code></td><td>Calls <code>cb(signedIn)</code> on sign-in and sign-out. Returns an unsubscribe function.</td></tr>
+            <tr><td><code>getProfile()</code></td><td><code>{ emailAddress, messagesTotal, threadsTotal, historyId }</code></td></tr>
+            <tr><td><code>listMessages({ q?, maxResults?, labelIds?, pageToken? })</code></td><td><code>{ items: { id, threadId }[], nextPageToken? }</code>. <code>maxResults</code> defaults to 10.</td></tr>
+            <tr><td><code>getMessage(id, format?)</code></td><td>Raw <code>Message</code>. <code>format</code>: <code>"full"</code> (default), <code>"metadata"</code> or <code>"minimal"</code>.</td></tr>
+            <tr><td><code>listThreads(params?)</code></td><td><code>{ items: Thread[], nextPageToken? }</code></td></tr>
+            <tr><td><code>getThread(id)</code></td><td><code>Thread</code> with its <code>messages</code></td></tr>
+            <tr><td><code>get(path, query?)</code></td><td>Any other read endpoint, e.g. <code>get("labels")</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="sub">Helpers</h3>
+      <div class="table-wrap">
+        <table>
+          <tbody>
+            <tr><td><code>parseMessage(message)</code></td><td><code>{ id, threadId, snippet, from?, to?, subject?, date?, text, html, attachments[] }</code></td></tr>
+            <tr><td><code>getHeader(message, name)</code></td><td>Case-insensitive header lookup</td></tr>
+            <tr><td><code>decodeBase64Url(data)</code></td><td>Gmail's base64url to a UTF-8 string</td></tr>
+            <tr><td><code>createAuth(clientId, scope)</code></td><td>Sign-in only, plus <code>token()</code></td></tr>
+            <tr><td><code>DEFAULT_SCOPE</code></td><td><code>https://www.googleapis.com/auth/gmail.readonly</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="sub">Errors</h3>
+      <p class="muted">Every failure is an <code>Error</code> with a <code>code</code>, plus a <code>status</code> for HTTP errors.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>code</th><th>When</th></tr></thead>
+          <tbody>
+            <tr><td><code>not_authenticated</code></td><td>Not signed in, the token expired, or Google returned 401. Call <code>signIn()</code> again.</td></tr>
+            <tr><td><code>auth_failed</code></td><td>The user closed the popup or denied access.</td></tr>
+            <tr><td><code>api_error</code></td><td>Gmail returned an error. Check <code>status</code> and <code>message</code>.</td></tr>
+            <tr><td><code>network</code></td><td>Offline, or Google's sign-in script was blocked.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="security">
+    <div class="wrap">
+      <h2>Security</h2>
+      <p class="lede">The token is a bearer credential for someone's mailbox. The library uses safe defaults, and the rest is up to your app.</p>
+      <div class="grid2">
+        <div class="card">
+          <h3>The library handles</h3>
+          <ul>
+            <li>Keeping the token in memory only. It is never written to <code>localStorage</code> or cookies.</li>
+            <li>Sending the token only to <code>gmail.googleapis.com</code>.</li>
+            <li>Revoking the token on <code>signOut()</code>.</li>
+            <li>Read-only scope by default.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Your app handles</h3>
+          <ul>
+            <li><b>Email HTML is untrusted.</b> Never put it in <code>innerHTML</code>. Render it in <code>&lt;iframe sandbox srcdoc&gt;</code> (as the demo above does) or sanitize it with DOMPurify.</li>
+            <li>Requesting only the scopes you need.</li>
+            <li>If you use a CSP, allowing <code>accounts.google.com/gsi/</code>, <code>oauth2.googleapis.com</code> and <code>gmail.googleapis.com</code>.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>react-gmail · MIT License</span>
+    <span><a href="https://github.com/webbridge/react-gmail">GitHub</a> · <a href="https://www.npmjs.com/package/react-gmail">npm</a> · <a href="https://github.com/webbridge/react-gmail/issues">Issues</a></span>
+  </div>
+</footer>
+
+<div class="modal-bg" id="consent" role="dialog" aria-modal="true" aria-labelledby="consent-title">
+  <div class="modal">
+    <div class="modal-tag">Simulated consent screen. Not a real Google page.</div>
+    <div class="modal-body">
+      <h3 id="consent-title">my-app.example wants access to your Google Account</h3>
+      <div class="acct"><span class="avatar" style="background:#7c3aed">Y</span>you@example.com</div>
+      <div class="scope">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+        <div>View your email messages and settings<small>https://www.googleapis.com/auth/gmail.readonly</small></div>
+      </div>
+      <p class="muted" style="font-size:13px;margin:12px 0 0">If you click Cancel, <code>signIn()</code> rejects with <code>auth_failed</code>.</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="deny" type="button">Cancel</button>
+      <button class="btn primary" id="allow" type="button">Allow</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const h = (tag, props = {}, ...kids) => {
+    const el = document.createElement(tag);
+    for (const k in props) {
+      if (k === "class") el.className = props[k];
+      else if (k.startsWith("on")) el.addEventListener(k.slice(2), props[k]);
+      else el.setAttribute(k, props[k]);
+    }
+    for (const c of kids.flat()) if (c != null) el.append(c);
+    return el;
+  };
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  };
+
+  /* ---------- theme ---------- */
+  const saved = store.get("rg-theme");
+  if (saved) document.documentElement.dataset.theme = saved;
+  $("#theme").addEventListener("click", () => {
+    const cur = document.documentElement.dataset.theme
+      || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    const next = cur === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    store.set("rg-theme", next);
+  });
+
+  /* ---------- syntax highlighting ---------- */
+  const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const KW = "import|from|export|const|let|var|await|async|function|return|if|else|do|while|type|new|try|catch|throw|of|in";
+  const TS_RE = new RegExp(String.raw`(\/\/[^\n]*)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|\x60(?:[^\x60\\]|\\.)*\x60)|\b(${KW})\b|\b(\d+(?:\.\d+)?)\b`, "g");
+  const JSON_RE = /("(?:[^"\\]|\\.)*")(\s*:)?|\b(true|false|null)\b|(-?\d+(?:\.\d+)?)/g;
+  function highlight(src, re, pick) {
+    let out = "", last = 0;
+    for (const m of src.matchAll(re)) {
+      out += esc(src.slice(last, m.index)) + pick(m);
+      last = m.index + m[0].length;
+    }
+    return out + esc(src.slice(last));
+  }
+  const span = (c, s) => `<span class="tk-${c}">${esc(s)}</span>`;
+  const hlTs = (s) => highlight(s, TS_RE, (m) =>
+    m[1] ? span("c", m[1]) : m[2] ? span("s", m[2]) : m[3] ? span("k", m[3]) : span("n", m[4]));
+  const hlJson = (s) => highlight(s, JSON_RE, (m) =>
+    m[1] ? (m[2] ? span("p", m[1]) + esc(m[2]) : span("s", m[1])) : m[3] ? span("k", m[3]) : span("n", m[4]));
+  $$("code[data-lang='ts']").forEach((c) => { c.innerHTML = hlTs(c.textContent); });
+
+  /* ---------- copy buttons & code tabs ---------- */
+  async function copy(btn, text) {
+    try { await navigator.clipboard.writeText(text); btn.textContent = "Copied"; }
+    catch { btn.textContent = "Press ⌘C"; }
+    setTimeout(() => (btn.textContent = "Copy"), 1400);
+  }
+  $$("[data-copy]").forEach((b) => b.addEventListener("click", () => copy(b, b.dataset.copy)));
+  $$("[data-copy-next]").forEach((b) => b.addEventListener("click", () => copy(b, $("pre", b.closest(".code")).textContent)));
+  $$("[data-tabs]").forEach((box) => {
+    const tabs = $$(".code-tab", box), pres = $$("pre", box);
+    tabs.forEach((t, i) => t.addEventListener("click", () => {
+      tabs.forEach((x, j) => x.setAttribute("aria-selected", String(i === j)));
+      pres.forEach((p, j) => (p.hidden = i !== j));
+    }));
+    $("[data-copy-tab]", box).addEventListener("click", (e) => copy(e.currentTarget, pres.find((p) => !p.hidden).textContent));
+  });
+
+  /* ---------- the library's real parsing code (from src/parse.ts) ---------- */
+  const decodeBase64Url = (d) =>
+    new TextDecoder().decode(Uint8Array.from(atob(d.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0)));
+  const getHeader = (m, name) => m.payload?.headers?.find((x) => x.name.toLowerCase() == name.toLowerCase())?.value;
+  function parseMessage(m) {
+    const out = { id: m.id, threadId: m.threadId, snippet: m.snippet || "", from: getHeader(m, "from"), to: getHeader(m, "to"),
+      subject: getHeader(m, "subject"), date: getHeader(m, "date"), text: "", html: "", attachments: [] };
+    const walk = ({ mimeType: t = "", filename, body, parts }) => {
+      if (filename && body?.attachmentId) out.attachments.push({ filename, mimeType: t, size: body.size || 0, attachmentId: body.attachmentId });
+      else if (body?.data && (t == "text/plain" || t == "text/html")) {
+        const k = t == "text/html" ? "html" : "text";
+        out[k] ||= decodeBase64Url(body.data);
+      }
+      parts?.map(walk);
+    };
+    m.payload && walk(m.payload);
+    return out;
+  }
+
+  /* ---------- mock mailbox ---------- */
+  const b64url = (s) => {
+    const bytes = new TextEncoder().encode(s);
+    let bin = "";
+    for (const b of bytes) bin += String.fromCharCode(b);
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  };
+  const ME = "you@example.com";
+  const COLORS = ["#2563eb", "#db2777", "#059669", "#d97706", "#7c3aed", "#0891b2", "#dc2626", "#4f46e5"];
+  const SEED = [
+    { from: "Maya Chen <maya@acme.dev>", subject: "Q4 roadmap review: notes & next steps", ago: 0.4, unread: true, labels: ["IMPORTANT"],
+      text: "Hi team,\n\nThanks for a great review today. Summary:\n\n1. Ship the v2 client by Dec 5.\n2. Drop gapi completely and move auth to GIS.\n3. Keep the bundle under 2 kB.\n\nSlides are attached. Comments welcome before Friday.\n\nMaya",
+      att: [["roadmap-q4.pdf", "application/pdf", 482113]] },
+    { from: "Northwind Billing <receipts@northwind.example>", subject: "Your invoice #INV-20481 is ready", ago: 3, unread: true, labels: ["CATEGORY_UPDATES"],
+      text: "Your invoice for November is ready.\n\nAmount due: $49.00\nDue date: Dec 1, 2026\n\nThe PDF is attached.",
+      att: [["INV-20481.pdf", "application/pdf", 91234]] },
+    { from: "Jonas Müller <jonas@studio.berlin>", subject: "Grüße aus Berlin: Fotos vom Offsite 📸", ago: 9, unread: false, labels: [],
+      text: "Hallo!\n\nHier sind die Fotos vom Offsite. Schöne Grüße an alle 😊\n\nJonas\n\n(Non-ASCII text and emoji like this are why decodeBase64Url decodes as UTF-8 instead of using plain atob.)",
+      att: [["offsite-01.jpg", "image/jpeg", 2310442], ["offsite-02.jpg", "image/jpeg", 1984020]] },
+    { from: "CI Bot <ci@builds.example>", subject: "PR #42: Add listThreads pagination (checks passed)", ago: 20, unread: true, labels: ["CATEGORY_UPDATES"],
+      text: "All checks passed on #42.\n\ntypecheck ✓  test ✓  build ✓  size-limit ✓ (1.48 kB)\n\nYour review was requested." },
+    { from: "Priya Natarajan <priya@acme.dev>", subject: "Lunch on Thursday?", ago: 30, unread: false, labels: [],
+      text: "Hey! Want to grab lunch on Thursday? The new ramen place opened down the street.\n\nP." },
+    { from: "Acme Billing <billing@acme.dev>", subject: "Invoice overdue reminder", ago: 52, unread: false, labels: ["CATEGORY_UPDATES"],
+      text: "This is a reminder that invoice #INV-19877 ($120.00) is 5 days overdue.\n\nIgnore this email if you've already paid." },
+    { from: "Maya Chen <maya@acme.dev>", subject: "Re: bundle size budget", ago: 75, unread: false, labels: [],
+      text: "1.5 kB gzip for everything sounds great. Let's add size-limit to CI so it stays that way." },
+    { from: "Design Weekly <hello@designweekly.example>", subject: "Issue #212: Calm interfaces", ago: 110, unread: false, labels: ["CATEGORY_PROMOTIONS"],
+      text: "This week: calm interfaces, sensible defaults, and why fewer settings is often the better product decision." },
+  ];
+  const NOW = Date.now();
+  const html = (s) => `<!doctype html><html><body style="font:14px/1.6 -apple-system,Segoe UI,Roboto,sans-serif;color:#1c1f26;margin:16px">${
+    esc(s.text).split("\n\n").map((p) => `<p style="margin:0 0 12px">${p.replace(/\n/g, "<br>")}</p>`).join("")}</body></html>`;
+
+  const MAILBOX = SEED.map((s, i) => {
+    const id = "18f3a2b4" + (0xa1c3 + i * 7919).toString(16).padStart(8, "0");
+    const date = new Date(NOW - s.ago * 3600e3);
+    const headers = [
+      { name: "From", value: s.from }, { name: "To", value: ME },
+      { name: "Subject", value: s.subject }, { name: "Date", value: date.toUTCString().replace("GMT", "+0000") },
+      { name: "Content-Type", value: s.att ? "multipart/mixed; boundary=\"b1\"" : "multipart/alternative; boundary=\"b2\"" },
+    ];
+    const body = (txt) => ({ size: new TextEncoder().encode(txt).length, data: b64url(txt) });
+    const alt = { partId: s.att ? "0" : "", mimeType: "multipart/alternative", filename: "", body: { size: 0 }, parts: [
+      { partId: s.att ? "0.0" : "0", mimeType: "text/plain", filename: "", body: body(s.text) },
+      { partId: s.att ? "0.1" : "1", mimeType: "text/html", filename: "", body: body(html(s)) },
+    ] };
+    const payload = s.att
+      ? { partId: "", mimeType: "multipart/mixed", filename: "", headers, body: { size: 0 }, parts: [alt,
+          ...s.att.map(([filename, mimeType, size], j) => ({ partId: String(j + 1), mimeType, filename,
+            body: { attachmentId: "ANGjdJ" + b64url(id + filename).slice(0, 26), size } }))] }
+      : { ...alt, partId: "", headers };
+    return {
+      id, threadId: id,
+      labelIds: ["INBOX", ...(s.unread ? ["UNREAD"] : []), ...s.labels],
+      snippet: s.text.replace(/\s+/g, " ").slice(0, 100),
+      historyId: String(904100 + i * 37),
+      internalDate: String(date.getTime()),
+      payload,
+    };
+  });
+
+  /* ---------- mock search (a small subset of Gmail search syntax) ---------- */
+  function search(q) {
+    const terms = q.toLowerCase().match(/(\w+:)?("[^"]*"|\S+)/g) || [];
+    return MAILBOX.filter((m) => {
+      const p = parseMessage(m);
+      return terms.every((t) => {
+        const [, op = "", raw] = t.match(/^(\w+:)?(.*)$/);
+        const v = raw.replace(/"/g, "");
+        switch (op) {
+          case "is:": return v === "unread" ? m.labelIds.includes("UNREAD") : v === "read" ? !m.labelIds.includes("UNREAD") : v === "important" ? m.labelIds.includes("IMPORTANT") : true;
+          case "in:": return v === "inbox" || v === "anywhere" ? m.labelIds.includes("INBOX") : false;
+          case "has:": return v === "attachment" ? p.attachments.length > 0 : true;
+          case "from:": return (p.from || "").toLowerCase().includes(v);
+          case "to:": return (p.to || "").toLowerCase().includes(v);
+          case "subject:": return (p.subject || "").toLowerCase().includes(v);
+          default: return (p.subject + " " + p.from + " " + p.text).toLowerCase().includes(t);
+        }
+      });
+    });
+  }
+
+  /* ---------- console ---------- */
+  const log = $("#log");
+  const short = (v, n = 60) => (v.length > n ? v.slice(0, n) + "…" : v);
+  function logCall(call, net) {
+    const res = h("div", { class: "entry-res" }, "pending");
+    const ms = h("span", { class: "ms" });
+    const entry = h("div", { class: "entry pending" },
+      h("div", { class: "entry-call" }, ms, call),
+      net ? h("div", { class: "entry-net" }, net) : null, res);
+    log.append(entry);
+    log.scrollTop = log.scrollHeight;
+    const t0 = performance.now();
+    return {
+      ok(text) { entry.classList.remove("pending"); res.className = "entry-res ok"; res.textContent = text; ms.textContent = Math.round(performance.now() - t0) + " ms"; log.scrollTop = log.scrollHeight; },
+      fail(e) { entry.classList.remove("pending"); res.className = "entry-res bad"; res.textContent = `GmailError { code: "${e.code}"${e.status ? ", status: " + e.status : ""}, message: "${e.message}" }`; ms.textContent = Math.round(performance.now() - t0) + " ms"; log.scrollTop = log.scrollHeight; },
+    };
+  }
+  const note = (text) => { log.append(h("div", { class: "entry" }, h("div", { class: "entry-res" }, "// " + text))); log.scrollTop = log.scrollHeight; };
+  $("#clear").addEventListener("click", () => { log.textContent = ""; });
+  note("const gmail = createGmailClient({ clientId })");
+  note("Nothing loaded from Google yet. Click “Sign in with Google”.");
+
+  /* ---------- mock client: same surface as createGmailClient ---------- */
+  const err = (code, message, status) => Object.assign(new Error(message), { code, status });
+  const API = "GET https://gmail.googleapis.com/gmail/v1/users/me/";
+  let token = "", exp = 0, gisLoaded = false;
+  const subs = new Set();
+  const latency = () => sleep(140 + Math.random() * 220);
+
+  const gmail = {
+    isSignedIn: () => !!token && Date.now() < exp - 1e4,
+    onAuthChange(f) { subs.add(f); return () => subs.delete(f); },
+    async signIn() {
+      if (!gisLoaded) {
+        const l = logCall("loadGis()", "GET https://accounts.google.com/gsi/client");
+        await sleep(260); gisLoaded = true; l.ok("script loaded (only once)");
+      }
+      const c = logCall("gmail.signIn()", "google.accounts.oauth2.initTokenClient({ client_id, scope: \"…/gmail.readonly\" }).requestAccessToken()");
+      const granted = await openConsent();
+      if (!granted) { const e = err("auth_failed", "popup_closed"); c.fail(e); throw e; }
+      token = "ya29.a0Ad52N" + b64url(String(Math.random())).slice(0, 18);
+      exp = Date.now() + 3599e3;
+      c.ok(`token stored in memory · expires_in: 3599`);
+      subs.forEach((f) => f(true));
+    },
+    signOut() {
+      const c = logCall("gmail.signOut()", "google.accounts.oauth2.revoke(token)");
+      token = ""; exp = 0; c.ok("token cleared and revoked");
+      subs.forEach((f) => f(false));
+    },
+    async _get(path, query, call, produce) {
+      // Like the real client: token() throws before any request when the token is missing or expired.
+      if (!gmail.isSignedIn()) {
+        const e = err("not_authenticated", "Not signed in");
+        logCall(call, "(no request sent: token missing or expired)").fail(e);
+        throw e;
+      }
+      const qs = String(new URLSearchParams(Object.entries(query).filter(([, v]) => v != null && v !== "")));
+      const c = logCall(call, API + path + (qs ? "?" + qs : "") + "\n  Authorization: Bearer " + token.slice(0, 14) + "…");
+      await latency();
+      const [value, summary] = produce();
+      c.ok(summary);
+      return value;
+    },
+    getProfile() {
+      return gmail._get("profile", {}, "gmail.getProfile()", () => {
+        const v = { emailAddress: ME, messagesTotal: 1284, threadsTotal: 903, historyId: "904391" };
+        return [v, JSON.stringify(v)];
+      });
+    },
+    listMessages(p = {}) {
+      const args = Object.entries(p).filter(([, v]) => v != null && v !== "").map(([k, v]) => `${k}: ${typeof v === "string" ? JSON.stringify(v) : v}`).join(", ");
+      return gmail._get("messages", { maxResults: 10, ...p }, `gmail.listMessages({ ${args} })`, () => {
+        const max = p.maxResults ?? 10, start = p.pageToken ? Number(atob(p.pageToken)) : 0;
+        const all = search(p.q || "");
+        const items = all.slice(start, start + max).map(({ id, threadId }) => ({ id, threadId }));
+        const next = start + max < all.length ? btoa(String(start + max)) : undefined;
+        return [{ items, nextPageToken: next }, `{ items: [${items.length} × { id, threadId }]${next ? `, nextPageToken: "${next}"` : ""} }`];
+      });
+    },
+    getMessage(id) {
+      return gmail._get("messages/" + encodeURIComponent(id), { format: "full" }, `gmail.getMessage("${id}")`, () => {
+        const m = MAILBOX.find((x) => x.id === id);
+        return [m, `Message { payload.mimeType: "${m.payload.mimeType}", parts: ${m.payload.parts.length} }`];
+      });
+    },
+  };
+
+  /* ---------- consent popup ---------- */
+  let consentDone;
+  const consent = $("#consent");
+  function openConsent() {
+    consent.classList.add("show");
+    $("#allow").focus();
+    return new Promise((r) => (consentDone = r));
+  }
+  const closeConsent = (ok) => { consent.classList.remove("show"); consentDone?.(ok); consentDone = null; };
+  $("#allow").addEventListener("click", () => closeConsent(true));
+  $("#deny").addEventListener("click", () => closeConsent(false));
+  consent.addEventListener("click", (e) => { if (e.target === consent) closeConsent(false); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && consent.classList.contains("show")) closeConsent(false); });
+
+  /* ---------- UI ---------- */
+  const app = $("#app");
+  const state = { list: [], pages: [undefined], page: 0, next: undefined, selected: null, cache: new Map(), tab: "rendered" };
+  const nameOf = (from = "") => (from.match(/^"?([^"<]+?)"?\s*</) || [, from])[1].trim();
+  const addrOf = (from = "") => (from.match(/<([^>]+)>/) || [, from])[1];
+  const colorOf = (s) => COLORS[[...s].reduce((a, c) => a + c.charCodeAt(0), 0) % COLORS.length];
+  const fmtDate = (d) => {
+    const t = new Date(d), now = new Date();
+    return t.toDateString() === now.toDateString()
+      ? t.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+      : t.toLocaleDateString([], { month: "short", day: "numeric" });
+  };
+  const fmtSize = (n) => (n > 1e6 ? (n / 1e6).toFixed(1) + " MB" : Math.round(n / 1e3) + " kB");
+  const avatar = (from) => h("span", { class: "avatar", style: "background:" + colorOf(addrOf(from)) }, nameOf(from).charAt(0).toUpperCase());
+  const clipIcon = () => {
+    const s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("fill", "none"); s.setAttribute("stroke-width", "2"); s.setAttribute("class", "clip");
+    s.innerHTML = '<path d="m21 11-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7"/>';
+    return s;
+  };
+
+  function showError(e) {
+    const box = $("#err");
+    box.textContent = "";
+    if (e.code === "not_authenticated") {
+      box.append(h("span", {}, "Caught ", h("code", {}, e.code), ". The token expired or Google rejected it. A real app shows sign-in again:"),
+        h("button", { class: "btn sm primary", type: "button", onclick: () => run(reauth) }, "signIn()"));
+    } else {
+      box.append(h("span", {}, "Caught ", h("code", {}, e.code), ": " + e.message));
+    }
+    box.classList.add("show");
+  }
+  const hideError = () => $("#err").classList.remove("show");
+  async function run(fn) {
+    hideError();
+    try { await fn(); } catch (e) { if (e.code) showError(e); else throw e; }
+  }
+  async function reauth() {
+    await gmail.signIn();
+    hideError();
+    await loadPage(state.page);
+  }
+
+  gmail.onAuthChange((on) => {
+    app.classList.toggle("on", on);
+    $("#dot").classList.toggle("on", on);
+    $("#who-text").textContent = on ? ME : "Signed out";
+    if (!on) {
+      state.list = []; state.cache.clear(); state.selected = null;
+      $("#reader").textContent = "";
+      $("#reader").append(h("div", { class: "reader-empty" }, "Select a message to call ", h("code", {}, "getMessage(id)"), "."));
+      hideError();
+    }
+  });
+
+  async function loadProfile() {
+    const p = await gmail.getProfile();
+    const box = $("#profile");
+    box.textContent = "";
+    box.append(
+      h("span", {}, "emailAddress ", h("b", {}, p.emailAddress)),
+      h("span", {}, "messagesTotal ", h("b", {}, p.messagesTotal.toLocaleString())),
+      h("span", {}, "threadsTotal ", h("b", {}, p.threadsTotal.toLocaleString())));
+  }
+
+  async function loadPage(page) {
+    const res = await gmail.listMessages({ q: $("#q").value.trim(), maxResults: Number($("#max").value), pageToken: state.pages[page] });
+    state.page = page;
+    state.pages[page + 1] = res.nextPageToken;
+    state.next = res.nextPageToken;
+    state.list = res.items;
+    renderList();
+    // Like the README example: fetch full messages for the visible page.
+    const missing = res.items.filter((m) => !state.cache.has(m.id));
+    const full = await Promise.all(missing.map((m) => gmail.getMessage(m.id)));
+    full.forEach((m) => state.cache.set(m.id, m));
+    renderList();
+  }
+
+  function renderList() {
+    const list = $("#list");
+    list.textContent = "";
+    if (!state.list.length) list.append(h("div", { class: "list-empty" }, "No messages match. Try ", h("code", {}, "in:inbox"), "."));
+    for (const { id } of state.list) {
+      const raw = state.cache.get(id);
+      if (!raw) { list.append(h("div", { class: "row" }, h("div", { class: "row-snip" }, "loading " + id + "…"))); continue; }
+      const p = parseMessage(raw);
+      const unread = raw.labelIds.includes("UNREAD");
+      list.append(h("button", {
+        type: "button", class: "row" + (unread ? " unread" : "") + (state.selected === id ? " sel" : ""),
+        onclick: () => select(id),
+      },
+        h("div", { class: "row-top" }, h("span", { class: "row-from" }, nameOf(p.from)), p.attachments.length ? clipIcon() : null, h("span", { class: "row-date" }, fmtDate(p.date))),
+        h("div", { class: "row-subj" }, p.subject),
+        h("div", { class: "row-snip" }, p.snippet)));
+    }
+    const pager = $("#pager");
+    pager.textContent = "";
+    pager.append(
+      h("button", { class: "btn sm", type: "button", ...(state.page ? {} : { disabled: "" }), onclick: () => run(() => loadPage(state.page - 1)) }, "← Prev"),
+      h("span", {}, `page ${state.page + 1}${state.next ? " · nextPageToken" : ""}`),
+      h("button", { class: "btn sm", type: "button", ...(state.next ? {} : { disabled: "" }), onclick: () => run(() => loadPage(state.page + 1)) }, "Next →"));
+  }
+
+  function select(id) {
+    state.selected = id;
+    renderList();
+    renderReader();
+  }
+
+  function renderReader() {
+    const raw = state.cache.get(state.selected);
+    const reader = $("#reader");
+    reader.textContent = "";
+    if (!raw) return;
+    const p = parseMessage(raw);
+    const tabs = [["rendered", "Rendered"], ["parsed", "parseMessage()"], ["raw", "Raw Message"]];
+    reader.append(h("div", { class: "tabs", role: "tablist" }, tabs.map(([k, label]) =>
+      h("button", { class: "tab", role: "tab", type: "button", "aria-selected": String(state.tab === k), onclick: () => { state.tab = k; renderReader(); } },
+        k === "rendered" ? label : h("code", {}, label)))));
+    const body = h("div", { class: "reader-body" });
+    if (state.tab === "rendered") {
+      const frame = h("iframe", { class: "msg-frame", sandbox: "", title: "Message body", referrerpolicy: "no-referrer" });
+      frame.srcdoc = p.html;
+      body.append(
+        h("h3", { class: "msg-subj" }, p.subject),
+        h("div", { class: "msg-meta" }, avatar(p.from), h("div", {}, h("div", {}, h("b", {}, nameOf(p.from)), " ", h("span", { class: "muted" }, "<" + addrOf(p.from) + ">")),
+          h("div", { class: "muted" }, "to " + p.to + " · " + new Date(p.date).toLocaleString()))),
+        frame,
+        p.attachments.length ? h("div", { class: "atts" }, p.attachments.map((a) => h("span", { class: "att" }, clipIcon(), a.filename, h("span", { class: "muted" }, fmtSize(a.size))))) : null,
+        h("p", { class: "hint" }, "The HTML body is rendered in <iframe sandbox srcdoc>, never innerHTML, because email HTML is untrusted."));
+    } else {
+      const v = state.tab === "parsed" ? p : raw;
+      const json = JSON.stringify(v, (k, x) => (k === "data" && typeof x === "string" ? short(x, 44) : (k === "html" && typeof x === "string") ? short(x, 90) : x), 2);
+      const pre = h("pre", { style: "margin:0;font:12px/1.55 var(--mono);white-space:pre-wrap;word-break:break-word" });
+      pre.innerHTML = hlJson(json);
+      body.append(
+        h("p", { class: "hint", style: "margin:0 0 10px" }, state.tab === "parsed"
+          ? "Output of parseMessage(raw). Headers are lifted out, base64url bodies are decoded as UTF-8, and attachments are collected from the MIME tree."
+          : "What getMessage(id) returns from Gmail: nested MIME parts with base64url-encoded bodies (shortened here)."),
+        h("div", { class: "code", style: "padding:12px 14px" }, pre));
+    }
+    reader.append(body);
+  }
+
+  $("#signin").addEventListener("click", () => run(async () => {
+    await gmail.signIn();
+    await loadProfile();
+    await loadPage(0);
+  }));
+  $("#signout").addEventListener("click", () => gmail.signOut());
+  $("#expire").addEventListener("click", () => {
+    if (!token) return;
+    exp = Date.now();
+    note("Token expired (simulated). isSignedIn() is now false, and the next call throws not_authenticated.");
+  });
+  $("#search").addEventListener("submit", (e) => {
+    e.preventDefault();
+    state.pages = [undefined];
+    run(() => loadPage(0));
+  });
+  $("#max").addEventListener("change", () => { state.pages = [undefined]; run(() => loadPage(0)); });
+  $$("#chips .chip").forEach((c) => c.addEventListener("click", () => {
+    $("#q").value = c.textContent;
+    state.pages = [undefined];
+    run(() => loadPage(0));
+  }));
+})();
+</script>
+</body>
+</html>

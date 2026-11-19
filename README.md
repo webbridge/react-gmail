@@ -2,6 +2,8 @@
 
 Tiny, typed Gmail API client for the browser, built on [Google Identity Services](https://developers.google.com/identity/oauth2/web/guides/overview). Works with React or any other framework.
 
+**[Live demo & setup guide →](https://webbridge.github.io/react-gmail/)**
+
 - **Zero dependencies.** Your bundle only gets what you import:
 
   | Import | Size (min + gzip) |
