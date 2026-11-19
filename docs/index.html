@@ -10,29 +10,35 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600&display=swap" rel="stylesheet" />
 <style>
+/* Palette follows react.dev: white / #F6F7F9 (light), #23272F / #16181D (dark), React blue accent.
+   Sections alternate between --bg and --bg-alt; .alt re-points the surface tokens. */
 :root {
-  --bg: #f6f7f9;
+  --bg: #ffffff;
   --card: #ffffff;
-  --sunken: #f1f3f6;
-  --text: #1c1f26;
-  --muted: #6b7280;
-  --line: #e5e7eb;
-  --accent: #2563eb;
+  --sunken: #f6f7f9;
+  --line: #ebecf0;
+  --bg-alt: #f6f7f9;
+  --card-alt: #ffffff;
+  --sunken-alt: #f6f7f9;
+  --line-alt: #e1e3e9;
+  --text: #23272f;
+  --muted: #5e687e;
+  --accent: #087ea4;
   --accent-ink: #ffffff;
-  --accent-soft: #e8efff;
+  --accent-soft: #e6f7ff;
   --ok: #15803d;
   --ok-soft: #e7f6ec;
   --warn: #b45309;
   --warn-soft: #fdf3e2;
   --danger: #dc2626;
   --danger-soft: #fdecec;
-  --code-bg: #0f1420;
-  --code-text: #dbe2f0;
+  --code-bg: #23272f;
+  --code-text: #f6f7f9;
   --tk-key: #c792ea;
   --tk-str: #a5d6a7;
   --tk-num: #f7a76c;
-  --tk-com: #6b7790;
-  --tk-prop: #82aaff;
+  --tk-com: #99a1b3;
+  --tk-prop: #58c4dc;
   --radius: 12px;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -40,43 +46,57 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0f1115;
-    --card: #171a21;
-    --sunken: #12151b;
-    --text: #e6e8ee;
-    --muted: #8b93a3;
-    --line: #262b36;
-    --accent: #6b9bff;
-    --accent-ink: #0b1020;
-    --accent-soft: #1b2744;
+    --bg: #23272f;
+    --card: #343a46;
+    --sunken: #2b3039;
+    --line: #404756;
+    --bg-alt: #16181d;
+    --card-alt: #23272f;
+    --sunken-alt: #1b1e24;
+    --line-alt: #343a46;
+    --text: #f6f7f9;
+    --muted: #99a1b3;
+    --accent: #58c4dc;
+    --accent-ink: #16181d;
+    --accent-soft: rgba(88, 196, 220, 0.14);
     --ok: #4ade80;
     --ok-soft: #12261a;
     --warn: #fbbf24;
     --warn-soft: #2a2110;
     --danger: #f87171;
     --danger-soft: #3a1c1f;
-    --code-bg: #0b0e14;
+    --code-bg: #16181d;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0f1115;
-  --card: #171a21;
-  --sunken: #12151b;
-  --text: #e6e8ee;
-  --muted: #8b93a3;
-  --line: #262b36;
-  --accent: #6b9bff;
-  --accent-ink: #0b1020;
-  --accent-soft: #1b2744;
+  --bg: #23272f;
+  --card: #343a46;
+  --sunken: #2b3039;
+  --line: #404756;
+  --bg-alt: #16181d;
+  --card-alt: #23272f;
+  --sunken-alt: #1b1e24;
+  --line-alt: #343a46;
+  --text: #f6f7f9;
+  --muted: #99a1b3;
+  --accent: #58c4dc;
+  --accent-ink: #16181d;
+  --accent-soft: rgba(88, 196, 220, 0.14);
   --ok: #4ade80;
   --ok-soft: #12261a;
   --warn: #fbbf24;
   --warn-soft: #2a2110;
   --danger: #f87171;
   --danger-soft: #3a1c1f;
-  --code-bg: #0b0e14;
+  --code-bg: #16181d;
   color-scheme: dark;
+}
+.alt {
+  background: var(--bg-alt);
+  --card: var(--card-alt);
+  --sunken: var(--sunken-alt);
+  --line: var(--line-alt);
 }
 
 * { box-sizing: border-box; }
@@ -104,9 +124,8 @@ h3 { font-size: 17px; margin: 0 0 6px; }
 p { margin: 0 0 12px; }
 .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
 .muted { color: var(--muted); }
-.lede { color: var(--muted); font-size: 16px; max-width: 680px; margin-bottom: 28px; }
-section { padding: 72px 0 0; }
-section:last-of-type { padding-bottom: 72px; }
+.lede { color: var(--muted); font-size: 16px; margin-bottom: 28px; }
+section { padding: 72px 0; }
 
 /* nav */
 .nav {
@@ -141,7 +160,7 @@ section:last-of-type { padding-bottom: 72px; }
 }
 
 /* hero */
-.hero { padding: 72px 0 8px; }
+.hero { padding: 72px 0; }
 .pill {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 13px; color: var(--muted);
@@ -490,7 +509,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: 
     </div>
   </header>
 
-  <section id="how">
+  <section id="how" class="alt">
     <div class="wrap">
       <h2>What it does</h2>
       <p class="lede">The library handles four steps that you would otherwise write yourself. The page loads nothing from Google until the user clicks sign in.</p>
@@ -588,7 +607,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: 
     </div>
   </section>
 
-  <section id="setup">
+  <section id="setup" class="alt">
     <div class="wrap">
       <h2>Set up Google Cloud</h2>
       <p class="lede">You need an OAuth <b>client ID</b> before the library can sign anyone in. Setup takes about 5 minutes and is free. You don't need an API key or a client secret.</p>
@@ -639,7 +658,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: 
       </div>
 
       <h3 class="sub">Choosing scopes</h3>
-      <p class="muted" style="max-width:720px">The default scope is read-only. Google sorts Gmail scopes into tiers, and the tier decides who can sign in to your app once it leaves <i>Testing</i>:</p>
+      <p class="muted">The default scope is read-only. Google sorts Gmail scopes into tiers, and the tier decides who can sign in to your app once it leaves <i>Testing</i>:</p>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Scope</th><th>Allows</th><th>Tier</th><th>To go public</th></tr></thead>
@@ -748,7 +767,7 @@ await fetch(url, { headers: { Authorization: `Bearer ${auth.token()}` } });</cod
     </div>
   </section>
 
-  <section id="api">
+  <section id="api" class="alt">
     <div class="wrap">
       <h2>API reference</h2>
       <p class="lede"><code>createGmailClient({ clientId, scopes? })</code> returns an object with the methods below. All Gmail calls go to <code>users/me</code>.</p>
@@ -826,7 +845,7 @@ await fetch(url, { headers: { Authorization: `Bearer ${auth.token()}` } });</cod
   </section>
 </main>
 
-<footer>
+<footer class="alt">
   <div class="wrap">
     <span>react-gmail · MIT License</span>
     <span><a href="https://github.com/webbridge/react-gmail">GitHub</a> · <a href="https://www.npmjs.com/package/react-gmail">npm</a> · <a href="https://github.com/webbridge/react-gmail/issues">Issues</a></span>

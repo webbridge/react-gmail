@@ -23,7 +23,8 @@
     "test": "vitest run",
     "size": "size-limit",
     "check": "npm run typecheck && npm run coverage && npm run build && npm run size && publint && attw --pack . --profile esm-only",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "prepublishOnly": "npm run check"
   },
   "repository": {
     "type": "git",
