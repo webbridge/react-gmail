@@ -1,10 +1,29 @@
 {
   "name": "react-gmail",
-  "version": "1.0.0",
-  "description": "Integration GMail API into your React Application",
-  "main": "index.js",
+  "version": "2.0.0-beta.0",
+  "description": "Tiny Gmail API client for the browser and React, built on Google Identity Services",
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
   "scripts": {
-    "test": "test"
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "size": "size-limit",
+    "check": "npm run typecheck && npm run coverage && npm run build && npm run size && publint && attw --pack . --profile esm-only",
+    "coverage": "vitest run --coverage"
   },
   "repository": {
     "type": "git",
@@ -15,18 +34,61 @@
     "gmail",
     "api",
     "react-gmail",
-    "react-gmail-api"
+    "react-gmail-api",
+    "google-identity-services"
   ],
   "author": "Andrei Tsapliuk",
   "contributors": [
     {
-      "name": "webbridge",
-      "email": "webbridge@mail.ru"
+      "name": "AndreiTsapliuk",
+      "email": "devolestudio@gmail.com"
     }
   ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/webbridge/react-gmail/issues"
   },
-  "homepage": "https://github.com/webbridge/react-gmail#readme"
+  "homepage": "https://github.com/webbridge/react-gmail#readme",
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@size-limit/preset-small-lib": "^14.3.0",
+    "@types/google.accounts": "^0.0.18",
+    "@vitest/coverage-v8": "^5.1.1",
+    "jsdom": "^31.0.1",
+    "publint": "^0.3.25",
+    "size-limit": "^14.3.0",
+    "tsdown": "^0.23.7",
+    "typescript": "^5.9.3",
+    "vitest": "^5.1.1"
+  },
+  "size-limit": [
+    {
+      "name": "everything",
+      "path": "dist/index.js",
+      "import": "*",
+      "limit": "1.5 kB",
+      "gzip": true
+    },
+    {
+      "name": "createGmailClient",
+      "path": "dist/index.js",
+      "import": "{ createGmailClient }",
+      "limit": "1 kB",
+      "gzip": true
+    },
+    {
+      "name": "createAuth",
+      "path": "dist/index.js",
+      "import": "{ createAuth }",
+      "limit": "0.7 kB",
+      "gzip": true
+    },
+    {
+      "name": "parseMessage",
+      "path": "dist/index.js",
+      "import": "{ parseMessage }",
+      "limit": "0.5 kB",
+      "gzip": true
+    }
+  ]
 }

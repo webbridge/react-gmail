@@ -1,331 +1,205 @@
 # react-gmail
 
-React library for using gmail api : https://developers.google.com/gmail/api
+Tiny, typed Gmail API client for the browser, built on [Google Identity Services](https://developers.google.com/identity/oauth2/web/guides/overview). Works with React or any other framework.
 
-## install
+- **Zero dependencies.** Your bundle only gets what you import:
 
-You can use npm `npm install --save react-gmail` or yarn `yarn add react-gmail`
+  | Import | Size (min + gzip) |
+  |---|---|
+  | `createGmailClient` (sign-in + Gmail API) | ~1.0 kB |
+  | `createAuth` (sign-in only) | ~0.6 kB |
+  | `parseMessage` (message parsing only) | ~0.4 kB |
+  | everything | ~1.5 kB |
 
-## use
+- **Modern Google sign-in.** Uses Google Identity Services, which replaced the shut-down `gapi.auth2`.
+- **Fully typed.** TypeScript types for messages, threads, profile and errors.
+- **Safe defaults.** Read-only scope, token kept in memory only, revoked on sign-out.
 
-- Repeat **Step 1** from this link: https://developers.google.com/gmail/api/quickstart/js
-- You also need to create file `gmail.config.json` in root of your application with your config:
+> **Upgrading from 1.x?** 1.x is broken because Google shut down `gapi.auth2`. See [Migrating from 1.x](#migrating-from-1x).
 
-```json
+## Install
+
+```bash
+npm install react-gmail
+```
+
+The package is ESM-only and runs in the browser. Any modern bundler (Vite, webpack, Next.js, …) works.
+
+## Google Cloud setup
+
+1. In [Google Cloud Console](https://console.cloud.google.com), create or pick a project.
+2. **APIs & Services → Library**: enable **Gmail API**.
+3. **OAuth consent screen**: set it up. While it is in *Testing*, add your Google accounts under **Test users**.
+4. **Credentials → Create credentials → OAuth client ID → Web application.** Add your app's origin (e.g. `http://localhost:5173`) to **Authorized JavaScript origins**. Copy the **Client ID**.
+
+You don't need an API key. The client ID isn't a secret and is safe to ship in front-end code.
+
+> `gmail.readonly` is a [restricted scope](https://developers.google.com/gmail/api/auth/scopes). In *Testing* mode only your listed test users (up to 100) can sign in. Opening it to everyone requires Google's app verification, including a security assessment.
+
+## Quick start
+
+```ts
+import { createGmailClient, parseMessage } from "react-gmail";
+
+const gmail = createGmailClient({ clientId: "YOUR_CLIENT_ID.apps.googleusercontent.com" });
+
+// Must be called from a user action (click), because it opens Google's popup.
+button.onclick = async () => {
+  await gmail.signIn();
+
+  const profile = await gmail.getProfile();
+  const { items } = await gmail.listMessages({ q: "is:unread", maxResults: 5 });
+  const messages = await Promise.all(items.map((m) => gmail.getMessage(m.id)));
+
+  console.log(profile.emailAddress, messages.map(parseMessage));
+};
+```
+
+### React
+
+Create one client outside your components. Read the sign-in state with `useSyncExternalStore`, so you don't need a provider or context:
+
+```tsx
+import { useState, useSyncExternalStore } from "react";
+import { createGmailClient, parseMessage, type ParsedMessage } from "react-gmail";
+
+const gmail = createGmailClient({ clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID });
+
+export function Inbox() {
+  const signedIn = useSyncExternalStore(gmail.onAuthChange, gmail.isSignedIn);
+  const [messages, setMessages] = useState<ParsedMessage[]>([]);
+
+  const load = async () => {
+    const { items } = await gmail.listMessages({ q: "is:unread", maxResults: 10 });
+    const full = await Promise.all(items.map((m) => gmail.getMessage(m.id)));
+    setMessages(full.map(parseMessage));
+  };
+
+  if (!signedIn) return <button onClick={() => gmail.signIn()}>Sign in with Google</button>;
+
+  return (
+    <>
+      <button onClick={load}>Load unread</button>
+      <button onClick={() => gmail.signOut()}>Sign out</button>
+      <ul>
+        {messages.map((m) => (
+          <li key={m.id}>
+            <b>{m.subject}</b> from {m.from}: {m.snippet}
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+```
+
+A demo that uses every feature is in [`examples/react-app`](examples/react-app).
+
+## API
+
+### `createGmailClient({ clientId, scopes? })`
+
+`scopes` defaults to `[DEFAULT_SCOPE]` (`https://www.googleapis.com/auth/gmail.readonly`). Returns:
+
+**Auth**
+
+| Method | Description |
+|---|---|
+| `signIn(): Promise<void>` | Opens Google's consent popup. Call it from a click handler. |
+| `signOut(): void` | Clears and revokes the token. |
+| `isSignedIn(): boolean` | `false` before sign-in and after the token expires (~1 hour). |
+| `onAuthChange(cb): () => void` | Calls `cb(signedIn)` on sign-in and sign-out. Returns an unsubscribe function. |
+
+**Gmail API** (all calls go to `users/me`)
+
+| Method | Returns |
+|---|---|
+| `getProfile()` | `{ emailAddress, messagesTotal, threadsTotal, historyId }` |
+| `listMessages({ q?, maxResults?, labelIds?, pageToken? })` | `{ items: { id, threadId }[], nextPageToken? }` |
+| `getMessage(id, format?)` | Raw `Message`. `format` is `"full"` (default), `"metadata"` or `"minimal"`. |
+| `listThreads(params?)` | `{ items: Thread[], nextPageToken? }` |
+| `getThread(id)` | `Thread` with its `messages` |
+| `get(path, query?)` | Any other read endpoint, e.g. `get("labels")` or `get("history", { startHistoryId })` |
+
+`maxResults` defaults to 10. `q` uses [Gmail search syntax](https://support.google.com/mail/answer/7190) (`is:unread from:alice has:attachment`). To get the next page, pass `nextPageToken` back as `pageToken`.
+
+### `parseMessage(message)`
+
+Turns a raw `Message` from `getMessage` (with format `"full"`) into:
+
+```ts
 {
-  "clientId": "<CLIENT_ID>",
-  "apiKey": "<API_KEY>",
-  "scope": "https://www.googleapis.com/auth/gmail.readonly",
-  "discoveryDocs": ["https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest"]
+  id, threadId, snippet,
+  from?, to?, subject?, date?,          // headers
+  text, html,                           // decoded bodies, UTF-8 safe, nested multipart supported
+  attachments: { filename, mimeType, size, attachmentId? }[]
 }
 ```
 
-- Import instance in your application `import gmailApi from 'react-gmail'`
+Also exported: `getHeader(message, name)` (header lookup, case-insensitive) and `decodeBase64Url(data)` (Gmail's base64url to a UTF-8 string).
 
-For get more info about API please check documentation: https://developers.google.com/gmail/api/v1/reference
+### `createAuth(clientId, scope)`
 
-## methods
+Sign-in only, for calling other Google APIs yourself. It has the same auth methods as the client, plus `token()`, which returns the access token or throws `not_authenticated`.
 
-##### getProfile
-
-For getting profile info:
-
-```javascript
- /**
-   * @param {string} userId
-   * @returns {Promise} Object: { emailAddress, messagesTotal, threadsTotal , historyId }
-   */
-  getProfile(userId = "me").then(...)
+```ts
+const auth = createAuth(CLIENT_ID, "https://www.googleapis.com/auth/calendar.readonly");
+await auth.signIn();
+await fetch(url, { headers: { Authorization: `Bearer ${auth.token()}` } });
 ```
 
-##### getMessageIds
+### Errors
 
-For getting message ids:
+Every failure is an `Error` with a `code`, and a `status` for HTTP errors:
 
-```javascript
- /**
-   * @param {boolean} [unread=false]
-   * @param {number} [maxResults=10]
-   * @param {string} [userId="me"]
-   * @returns {Promise} Array: [ {id, threadId} ]
-   */
-  getMessageIds(unread = false, maxResults = 10, userId = "me").then(...)
-```
+| `code` | When |
+|---|---|
+| `not_authenticated` | Not signed in, the token expired, or Google rejected it (401). Call `signIn()` again. |
+| `auth_failed` | The user closed the popup or denied access. |
+| `api_error` | Gmail returned an error. Check `status` and `message`. |
+| `network` | Offline, or Google's sign-in script was blocked (ad blocker, CSP). |
 
-##### getMessagesByIds
-
-For getting message data by array of ids or by string id:
-
-```javascript
- /**
-   * @param {[string] | string} id
-   * @param {string} [userId="me"]
-   * @returns {Promise} [{id, labelId, snippet, internalDate, payload}] | {...}
-   */
-  getMessagesFromIds(ids, userId = "me").then(...)
-```
-
-##### getMessages
-
-For getting message data:
-
-```javascript
- /**
-   * @param {boolean} [unread=false]
-   * @param {number} [maxResults=10]
-   * @param {string} [userId="me"]
-   * @returns {Promise} [{id, labelIds, snippet, internalDate, payload}] | {...}
-   */
-  getMessages(unread = false, maxResults = 10, userId = "me").then(...)
-```
-
-##### getThreadsList
-
-For getting threads list data (returned array of {id, snippet, historyId}):
-
-```javascript
-/**
- * Get list of snippets from the last threads
- * @param {string} userId
- * @returns {Promise} [{id, snippet, historyId}]
- */
-getThreadsList(userId = "me").then(...);
-```
-
-##### getThreads
-
-For getting threads:
-
-```javascript
-/**
- * @param {string | array} id
- * @param {Promise} userId
- */
-getThreads(id, userId = "me").then(...);
-```
-
-##### listenSign
-
-For listening your sign status
-
-```javascript
-/**
- * Method for update your sign if it was changed
- * @param {*} callback function for updating sign status
- */
-listenSign(callback);
-```
-
-##### getArrayOfIds
-
-For converting object to array of ids _(using for prepare array of ids for getMessages method)_:
-
-```javascript
-/**
- * @param {object} data getMessageIds response
- */
-getArrayOfIds(data);
-```
-
-##### normalizeData
-
-For normalizing data _(using with response of getMessages method)_:
-
-```javascript
-/**
- * @param {array | object} data getMessages response
- * @returns {array | object}
- */
-normalizeData(data);
-```
-
-##### getBody
-
-For getting body from getMessages response _(also decoding from base64)_:
-
-```javascript
-/**
- * @param {array | object} data getMessages response
- * @returns {object} text, html
- */
-getBody(data);
-```
-
-##### getMetaFromHeaders
-
-For getting important info (`"From", "Date", "Subject"` headers object) from getMessage response:
-
-```javascript
-/**
- * @param {object} data getMessageIds headers response
- */
-getMetaFromHeaders(data);
-```
-
-## examples
-
-##### getMessages
-
-```javascript
-import React from "react";
-import gmailApi from "react-gmail";
-
-class SomeComponent extends React.Component {
-  state = {
-    messages: []
-  };
-
-  getMessages = () => {
-    gmailApi.getMessages(true, 5).then(res => {
-      this.setState({ messages: gmailApi.normalizeData(res) });
-    });
-  };
-
-  // Another way to get messages by ids
-  // getMessages = () => {
-  //   gmailApi.getMessageIds(false, 5).then(resIds => {
-  //     gmailApi.getMessages(gmailApi.getArrayOfIds(resIds)).then(res => {
-  //       this.setState({ messages: gmailApi.normalizeData(res) });
-  //     });
-  //   });
-  // }
-
-  render() {
-    const { messages } = this.state;
-    return (
-      <div>
-        <button onCLick={this.getMessages}>Get Messages</button>
-        <ul>
-          {messages.map(message => (
-            <li key="message.id">
-              <div>
-                <span>
-                  {message.subject}: {message.snippet}
-                </span>
-                <p>{message.date}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
-    );
-  }
+```ts
+try {
+  await gmail.getProfile();
+} catch (e) {
+  if ((e as GmailError).code === "not_authenticated") showSignInButton();
 }
 ```
 
-##### getThreads
+## Security
 
-If you want to get just snippets from messages, the better way it's using getThreadsList method:
+- **Email HTML is untrusted.** Never put `parseMessage().html` into `innerHTML` or `dangerouslySetInnerHTML`. Render it in a sandboxed iframe (`<iframe sandbox="" srcDoc={html} />`) or clean it first with a sanitizer such as [DOMPurify](https://github.com/cure53/DOMPurify). Treat `from`, `subject` and attachment filenames as untrusted too, if you render them outside React.
+- **Tokens stay in memory.** They are never written to `localStorage` or cookies and are only sent to `gmail.googleapis.com`. A page reload means signing in again.
+- **Request only the scopes you need.** The default is read-only.
+- **Content Security Policy.** If your app uses a CSP, allow Google's sign-in script and the Gmail API. Check [Google's CSP guide](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid#content_security_policy) for the current list.
+  ```
+  script-src https://accounts.google.com/gsi/client;
+  frame-src  https://accounts.google.com/gsi/;
+  connect-src https://accounts.google.com/gsi/ https://oauth2.googleapis.com https://gmail.googleapis.com;
+  ```
 
-```javascript
-import React from "react";
-import gmailApi from "react-gmail";
+## Migrating from 1.x
 
-class SomeComponent extends React.Component {
-  state = {
-    messages: []
-  };
+2.0 is a rewrite with a new API. 1.x relied on `gapi.auth2`, which Google shut down, so it can no longer sign in.
 
-  getMessages = () => {
-    gmailApi.getThreadsList().then(res => {
-      this.setState({ messages: res.result.threads });
-    });
-  };
+| 1.x | 2.x |
+|---|---|
+| `gmail.config.json` in your app root | `createGmailClient({ clientId })` |
+| `import gmailApi from "react-gmail"` (singleton) | `const gmail = createGmailClient(...)` |
+| `handleSignIn()` / `handleSignOut()` | `signIn()` / `signOut()` |
+| `listenSign(cb)`, `gmailApi.signIn` | `onAuthChange(cb)`, `isSignedIn()` |
+| `getProfile()` | `getProfile()` (returns the data directly, not `{ result }`) |
+| `getMessageIds(unread, max)` | `listMessages({ q: "is:unread", maxResults })` |
+| `getMessagesByIds(ids)` / `getMessages(...)` | `Promise.all(ids.map(gmail.getMessage))` |
+| `getThreadsList(...)` / `getThreads(id)` | `listThreads(...)` / `getThread(id)` |
+| `getArrayOfIds(res)` | `items.map((m) => m.id)` |
+| `normalizeData`, `getBody`, `getMetaFromHeaders` | `parseMessage(message)` |
 
-  render() {
-    const { messages } = this.state;
-    return (
-      <div>
-        <button onCLick={this.getMessages}>Get Snippets from messages</button>
-        <ul>
-          {messages.map(message => (
-            <li key="message.id">{message.snippet}</li>
-          ))}
-        </ul>
-      </div>
-    );
-  }
-}
-```
+Also changed:
+- Responses are returned directly instead of wrapped in `{ result }`.
+- Errors are typed with a `code` instead of showing a built-in notification popup.
 
-##### getProfile
+## License
 
-```javascript
-gmailApi.getProfile().then(resProfile => {
-  this.setState({ profile: resProfile.result });
-});
-```
-
-##### listenSign
-
-```javascript
-import React from "react";
-import gmailApi from "react-gmail";
-
-class SomeComponent extends React.Component {
-  state = {
-    sign: gmailApi.sign
-  };
-
-  componentDidMount() {
-    gmailApi.listenSign(this.signUpdate);
-  }
-
-  signUpdate = sign => {
-    this.setState({ sign });
-  };
-
-  render() {
-    return (
-      <div>
-        <p> Sign status: {this.state.sign} </p>
-      </div>
-    );
-  }
-}
-```
-
-## customize
-
-For customizing signIn & signOut you can use `handleSignIn` and `handleSignOut` methods:
-
-```javascript
-import React from "react";
-import gmailApi from "react-gmail";
-
-class SomeComponent extends React.Component {
-  state = {
-    sign: gmailApi.sign
-  };
-
-  componentDidMount() {
-    gmailApi.listenSign(this.signUpdate);
-  }
-
-  signUpdate = sign => {
-    this.setState({ sign });
-  };
-
-  handleSignIn = () => {
-    gmailApi.handleSignIn().then(() => {
-      console.log("handleSignIn");
-    });
-  };
-
-  handleSignOut = () => {
-    gmailApi.handleSignOut().then(() => {
-      console.log("handleSignOut");
-    });
-  };
-
-  render() {
-    return (
-      <div>
-        <button onCLick={this.handleSignIn}>SignIn Google</button>
-        <button onCLick={this.handleSignOut}>SignOut Google</button>
-        <p> Sign status: {this.state.sign} </p>
-      </div>
-    );
-  }
-}
-```
+MIT
